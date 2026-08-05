@@ -1,0 +1,22 @@
+ULTIMATECAD LOGIN PRERENDER FIX
+
+Extract this ZIP directly into:
+C:\Projects\ultimatecad
+
+Allow Windows to merge folders and replace:
+src\app\login\page.tsx
+
+The patch also adds:
+src\app\login\login-client.tsx
+
+Then run:
+
+cd C:\Projects\ultimatecad
+rmdir /s /q .next
+pnpm build
+
+When successful:
+
+git add .
+git commit -m "fix: wrap login search params in suspense"
+git push origin main
