@@ -29,15 +29,16 @@ export default async function WrittenLicenseTestPage({
   const characterRaw = application.character;
   const character = Array.isArray(characterRaw) ? characterRaw[0] : characterRaw;
   if (!character || character.owner_user_id !== user.id) redirect("/licenses");
-
   if (application.written_status === "not_required") redirect("/licenses");
 
-  const { data: questions } = await supabase
-    .from("license_test_questions")
-    .select("id,question,option_a,option_b,option_c,option_d,sort_order")
-    .eq("license_type_id", application.license_type_id)
-    .eq("active", true)
-    .order("sort_order");
+  const { data: questions, error } = await supabase.rpc(
+    "get_written_license_test_questions",
+    { p_application_id: applicationId }
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
 
   const typeRaw = application.license_type;
   const licenseType = Array.isArray(typeRaw) ? typeRaw[0] : typeRaw;

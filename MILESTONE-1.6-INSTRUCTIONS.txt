@@ -1,0 +1,36 @@
+ULTIMATECAD MILESTONE 1.6 — DMV COMPLETION
+
+1. Extract this ZIP into:
+   C:\Projects\ultimatecad
+
+2. Allow Windows to merge folders and replace files.
+
+3. Open:
+   src\app\globals.css.append.txt
+
+4. Copy all content and paste it at the VERY END of:
+   src\app\globals.css
+
+5. Delete:
+   src\app\globals.css.append.txt
+
+6. Run only this migration in Supabase:
+   supabase/migrations/202608050007_complete_dmv_controls.sql
+
+7. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+8. Push:
+   git add .
+   git commit -m "feat: complete DMV license management"
+   git push origin main
+
+NOTES:
+- New licenses correctly begin at 0 driver points.
+- 0 points means no demerit points.
+- Applications become completed after approval or denial.
+- Only ready_for_review applications appear in the DMV queue.
+- Test questions are randomized server-side.
+- Default test length is 15 questions and can be changed in dmv_settings.

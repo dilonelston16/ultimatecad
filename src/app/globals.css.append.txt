@@ -1,133 +1,114 @@
-/* UltimateCAD mobile sidebar repair — place at the VERY END of globals.css */
+/* Milestone 1.6 — DMV completion */
+.dmv-admin-page,
+.dmv-admin-stack {
+  display: grid;
+  gap: 20px;
+}
 
-@media (max-width: 700px) {
-  html,
-  body {
+.dmv-admin-controls,
+.point-control {
+  margin: 16px 0;
+}
+
+.dmv-admin-controls label,
+.point-control label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.dmv-admin-controls textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.point-control input {
+  max-width: 140px;
+}
+
+.dmv-record-list {
+  display: grid;
+  gap: 12px;
+}
+
+.dmv-record-list > article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #08162a;
+}
+
+.dmv-record-list > article > div:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.dmv-record-list span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.dmv-action-row,
+.dmv-action-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.button.danger {
+  border-color: #74343d;
+  background: #3a1820;
+  color: #ff9aa6;
+}
+
+.license-management-copy {
+  min-width: 230px;
+}
+
+.dmv-action-grid button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #294567;
+  border-radius: 8px;
+  background: #0d2039;
+  color: #d7e7f9;
+  cursor: pointer;
+}
+
+.dmv-action-grid button:hover {
+  border-color: #3889dd;
+  background: #12305a;
+}
+
+@media (max-width: 760px) {
+  .dmv-record-list > article {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dmv-action-row,
+  .dmv-action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dmv-action-row .button,
+  .dmv-action-grid button {
     width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
+    justify-content: center;
   }
+}
 
-  .app-shell {
-    display: block !important;
-    grid-template-columns: none !important;
-    width: 100% !important;
-    min-height: 100vh;
-  }
-
-  .workspace {
-    width: 100% !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding-top: 58px !important;
-    overflow-x: hidden;
-  }
-
-  .sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    z-index: 130 !important;
-    display: block !important;
-    width: min(88vw, 330px) !important;
-    min-width: 0 !important;
-    max-width: 330px !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    margin: 0 !important;
-    overflow-y: auto !important;
-    transform: translateX(-105%) !important;
-    transition: transform .22s ease !important;
-    box-shadow: 20px 0 60px rgba(0, 0, 0, .5);
-  }
-
-  .sidebar.mobile-open {
-    transform: translateX(0) !important;
-  }
-
-  .mobile-sidebar-toggle {
-    position: fixed !important;
-    top: 10px !important;
-    left: 12px !important;
-    z-index: 120 !important;
-    display: grid !important;
-    width: 42px !important;
-    height: 42px !important;
-    place-items: center;
-    padding: 0 !important;
-    border: 1px solid #263d5d !important;
-    border-radius: 11px !important;
-    background: rgba(8, 20, 38, .98) !important;
-    color: #fff !important;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
-  }
-
-  .mobile-sidebar-backdrop {
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: 128 !important;
-    display: block !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    border: 0 !important;
-    background: rgba(0, 6, 16, .72) !important;
-    backdrop-filter: blur(3px);
-  }
-
-  .mobile-sidebar-close {
-    display: grid !important;
-  }
-
-  .sidebar-section {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-  }
-
-  .sidebar-section .section-label,
-  .sidebar-section .department-switch {
-    grid-column: auto !important;
-  }
-
-  .shell-page-header {
-    width: 100% !important;
-    padding: 16px 16px 18px 68px !important;
-  }
-
-  .workspace > * {
-    max-width: 100%;
-  }
-
-  .character-profile-page,
-  .civilian-page,
-  .dmv-page,
-  .written-test-page,
-  .dashboard-page {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden;
-  }
-
-  .character-profile-grid,
-  .civilian-overview-grid,
-  .dmv-grid,
-  .dashboard-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .profile-hero,
-  .active-character-hero,
-  .panel {
-    min-width: 0 !important;
-  }
-
-  table {
-    min-width: 680px;
-  }
-
-  .table-wrap,
-  .responsive-table {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+@media (max-width: 460px) {
+  .dmv-action-row,
+  .dmv-action-grid {
+    grid-template-columns: 1fr;
   }
 }
