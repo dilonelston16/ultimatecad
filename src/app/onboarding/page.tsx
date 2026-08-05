@@ -1,9 +1,22 @@
-"use client";
-import { useState } from "react";
-import Link from "next/link";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import OnboardingClient from "./onboarding-client";
 
-const steps = ["Community", "Platforms", "Organization", "Permissions", "Review"];
-export default function OnboardingPage(){
- const [step,setStep]=useState(0);
- return <main className="onboarding-page"><aside className="onboarding-aside"><Link href="/" className="brand"><span className="brand-mark">U</span><span>UltimateCAD</span></Link><div className="step-list">{steps.map((s,i)=><div className={`step ${i===step?"active":""} ${i<step?"done":""}`} key={s}><span>{i+1}</span><b>{s}</b></div>)}</div></aside><section className="onboarding-main"><div className="form-card"><span className="eyebrow">STEP {step+1} OF {steps.length}</span><h1>{steps[step]}</h1>{step===0&&<div className="form-grid"><label>Community name<input defaultValue="Ultimate World Roleplay"/></label><label>Community prefix<input defaultValue="UWRP"/></label><label>Community slug<input defaultValue="ultimate-world-roleplay"/></label><label>Timezone<select defaultValue="America/Montreal"><option>America/Montreal</option><option>America/New_York</option><option>America/Los_Angeles</option></select></label></div>}{step===1&&<div className="option-grid"><label><input type="checkbox" defaultChecked/>PS4</label><label><input type="checkbox" defaultChecked/>PS5</label><label><input type="checkbox" defaultChecked/>Xbox One</label><label><input type="checkbox" defaultChecked/>Xbox Series X|S</label></div>}{step===2&&<div className="structure-preview"><div>Agency: Law Enforcement</div><div>Department: LSPD</div><div>Division: Patrol</div><div>Subdivision: Traffic</div><button className="button ghost">+ Add structure item</button></div>}{step===3&&<div className="permission-preview"><p>Everyone automatically receives civilian, banking, businesses, economy, stores, vehicles, properties, licensing, weapons and insurance access.</p><p>Government departments are unlocked through Discord roles, permission keys or direct membership assignments.</p></div>}{step===4&&<div className="review-box"><b>Ready to create your first UltimateCAD community.</b><span>4 platforms · Shared civilian modules · LEO agency hierarchy · Permission-ready</span></div>}<div className="wizard-actions"><button className="button ghost" disabled={step===0} onClick={()=>setStep(v=>v-1)}>Back</button>{step<steps.length-1?<button className="button" onClick={()=>setStep(v=>v+1)}>Continue</button>:<Link className="button" href="/dashboard">Create community</Link>}</div></div></section></main>
+export default async function OnboardingPage() {
+  const supabase = await createServerSupabaseClient();
+  const { data: userData } = await supabase.auth.getUser();
+
+  if (!userData.user) redirect("/login?next=/onboarding");
+
+  const { data: membership } = await supabase
+    .from("community_memberships")
+    .select("id")
+    .eq("user_id", userData.user.id)
+    .eq("status", "active")
+    .limit(1)
+    .maybeSingle();
+
+  if (membership) redirect("/dashboard");
+
+  return <OnboardingClient />;
 }

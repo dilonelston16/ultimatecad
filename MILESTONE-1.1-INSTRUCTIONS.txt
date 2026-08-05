@@ -1,0 +1,17 @@
+ULTIMATECAD MILESTONE 1.1 — AUTHENTICATION & COMMUNITY ONBOARDING
+
+1. Copy this patch into C:\Projects\ultimatecad and replace matching files.
+2. In Supabase SQL Editor, run your initial migration first if it has not been run:
+   supabase/migrations/202608040001_initial_foundation.sql
+3. Then run:
+   supabase/migrations/202608050001_auth_and_communities.sql
+4. Build locally:
+   rmdir /s /q .next
+   pnpm install
+   pnpm build
+5. Commit and deploy:
+   git add .
+   git commit -m "feat: add Discord auth and community onboarding"
+   git push origin main
+
+IMPORTANT: .env.local is intentionally excluded from this ZIP.
