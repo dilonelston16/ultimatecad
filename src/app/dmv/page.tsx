@@ -13,7 +13,7 @@ export default async function DmvPage() {
 
   const { data: membership } = await supabase
     .from("community_memberships")
-    .select("community_id")
+    .select("community_id,is_owner,status")
     .eq("user_id", user.id)
     .eq("status", "active")
     .order("created_at")
@@ -22,12 +22,25 @@ export default async function DmvPage() {
 
   if (!membership) redirect("/onboarding");
 
-  const { data: allowed } = await supabase.rpc("has_permission", {
-    p_community_id: membership.community_id,
-    p_permission_key: "dmv.manage",
-  });
+  let canManageDmv = membership.is_owner === true;
 
-  if (!allowed) redirect("/dashboard");
+  if (!canManageDmv) {
+    const { data: allowed, error: permissionError } = await supabase.rpc(
+      "has_permission",
+      {
+        target_community_id: membership.community_id,
+        requested_permission: "dmv.manage",
+      }
+    );
+
+    if (permissionError) {
+      console.error("DMV permission check failed:", permissionError.message);
+    }
+
+    canManageDmv = allowed === true;
+  }
+
+  if (!canManageDmv) redirect("/dashboard?error=dmv_access_required");
 
   const { data: applications } = await supabase
     .from("license_applications")
