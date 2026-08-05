@@ -1,0 +1,39 @@
+ULTIMATECAD — MILESTONE 1.0 LANDING PAGE
+
+1. Extract this ZIP into:
+   C:\Projects\ultimatecad
+
+2. Allow Windows to merge folders and replace files.
+
+3. Keep your existing .env.local file. It is intentionally not included.
+
+4. Run:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm install
+   pnpm build
+
+5. If the build succeeds:
+   git add .
+   git commit -m "feat: add detailed commercial UltimateCAD landing page"
+   git push origin main
+
+WHAT THIS PATCHED
+- Rebuilt the public landing page as a detailed commercial product page.
+- Added detailed product positioning for Xbox and PlayStation GTA RP.
+- Added an embedded LEO dashboard preview.
+- Added complete module descriptions.
+- Added commercial multi-community selling points.
+- Added automatic ID engine examples.
+- Added pricing plans:
+  Community: $0/month
+  Professional: $14.99/month
+  Enterprise: $29.99/month
+  Ultimate: $49.99/month
+- Added setup workflow, FAQ, final CTA, responsive mobile design and footer.
+
+UNCHANGED
+- Existing Discord login code.
+- Existing Supabase configuration.
+- Existing onboarding, dashboard and LEO routes.
+- Existing SQL migrations and environment variables.
