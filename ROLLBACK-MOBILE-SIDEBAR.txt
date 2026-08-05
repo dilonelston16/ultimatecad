@@ -1,0 +1,27 @@
+ULTIMATECAD MOBILE SIDEBAR REPAIR
+
+1. Open:
+   C:\Projects\ultimatecad\src\app\globals.css
+
+2. Remove the previous block beginning with:
+   /* Milestone 1.5.1 — real license tests and mobile sidebar */
+
+   You may keep the written-test styles above the @media section.
+   Remove only the previous @media (max-width: 700px) block if easier.
+
+3. Copy everything from:
+   src\app\globals.css.append.txt
+
+   and paste it at the VERY END of globals.css.
+
+4. Delete:
+   src\app\globals.css.append.txt
+
+5. Clear cache and build:
+   rmdir /s /q .next
+   pnpm build
+
+6. Push:
+   git add .
+   git commit -m "fix: repair mobile sidebar layout"
+   git push origin main
