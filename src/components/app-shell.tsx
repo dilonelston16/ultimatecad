@@ -11,22 +11,23 @@ import {
   CircleUserRound,
   Gavel,
   Home,
+  KeyRound,
   Landmark,
   LayoutDashboard,
+  LockKeyhole,
   LogOut,
+  Menu,
   Package,
   Scale,
   Settings,
   Shield,
-  KeyRound,
-  LockKeyhole,
-  ShoppingBag,
   Store,
   Users,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import CharacterSwitcher from "@/components/character-switcher";
 
 type AppShellProps = {
@@ -76,9 +77,11 @@ const communityItems: NavItem[] = [
 function NavLink({
   item,
   active,
+  onNavigate,
 }: {
   item: NavItem;
   active: boolean;
+  onNavigate: () => void;
 }) {
   const Icon = item.icon;
 
@@ -93,36 +96,78 @@ function NavLink({
   }
 
   return (
-    <Link href={item.href} className={`nav-item${active ? " active" : ""}`}>
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      className={`nav-item${active ? " active" : ""}`}
+    >
       <Icon size={17} strokeWidth={1.9} />
       <span>{item.label}</span>
     </Link>
   );
 }
 
-export function AppShell({
-  children,
-  title,
-  subtitle,
-}: AppShellProps) {
+export function AppShell({ children, title, subtitle }: AppShellProps) {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   const isActive = (href: string) =>
     href === "/dashboard"
       ? pathname === href
       : pathname === href || pathname.startsWith(`${href}/`);
 
+  const closeMobile = () => setMobileOpen(false);
+
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      <button
+        type="button"
+        className="mobile-sidebar-toggle"
+        aria-label="Open navigation"
+        aria-expanded={mobileOpen}
+        onClick={() => setMobileOpen(true)}
+      >
+        <Menu size={22} />
+      </button>
+
+      {mobileOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          className="mobile-sidebar-backdrop"
+          onClick={closeMobile}
+        />
+      )}
+
+      <aside className={`sidebar${mobileOpen ? " mobile-open" : ""}`}>
         <div className="sidebar-brand">
-          <Link href="/dashboard" className="brand">
+          <Link href="/dashboard" onClick={closeMobile} className="brand">
             <span className="brand-mark">U</span>
             <span>
               UltimateCAD
               <small>Community operating system</small>
             </span>
           </Link>
+
+          <button
+            type="button"
+            className="mobile-sidebar-close"
+            aria-label="Close navigation"
+            onClick={closeMobile}
+          >
+            <X size={21} />
+          </button>
         </div>
 
         <CharacterSwitcher />
@@ -130,7 +175,12 @@ export function AppShell({
         <div className="sidebar-section">
           <span className="section-label">Main</span>
           {globalItems.map((item) => (
-            <NavLink key={item.href} item={item} active={isActive(item.href)} />
+            <NavLink
+              key={item.href}
+              item={item}
+              active={isActive(item.href)}
+              onNavigate={closeMobile}
+            />
           ))}
         </div>
 
@@ -145,14 +195,24 @@ export function AppShell({
           </button>
 
           {departmentItems.map((item) => (
-            <NavLink key={item.href} item={item} active={isActive(item.href)} />
+            <NavLink
+              key={item.href}
+              item={item}
+              active={isActive(item.href)}
+              onNavigate={closeMobile}
+            />
           ))}
         </div>
 
         <div className="sidebar-section">
           <span className="section-label">Community</span>
           {communityItems.map((item) => (
-            <NavLink key={item.href} item={item} active={isActive(item.href)} />
+            <NavLink
+              key={item.href}
+              item={item}
+              active={isActive(item.href)}
+              onNavigate={closeMobile}
+            />
           ))}
         </div>
 
@@ -169,6 +229,10 @@ export function AppShell({
       <main className="workspace">
         {(title || subtitle) && (
           <header className="shell-page-header">
+            <div className="mobile-page-brand">
+              <span className="brand-mark">U</span>
+              <span>UltimateCAD</span>
+            </div>
             <div>
               {title ? <h1>{title}</h1> : null}
               {subtitle ? <p>{subtitle}</p> : null}

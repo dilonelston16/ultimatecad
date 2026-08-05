@@ -1,0 +1,29 @@
+ULTIMATECAD MILESTONE 1.5.1
+REAL LICENSE TESTS + MOBILE SIDEBAR
+
+1. Extract this ZIP directly into:
+   C:\Projects\ultimatecad
+
+2. Allow Windows to merge folders and replace files.
+
+3. Open:
+   src\app\globals.css.append.txt
+
+4. Copy all content from that file and paste it at the bottom of:
+   src\app\globals.css
+
+5. Delete:
+   src\app\globals.css.append.txt
+
+6. Run only this new SQL migration in Supabase:
+   supabase/migrations/202608050006_license_tests_and_mobile_fix.sql
+
+7. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+8. Push:
+   git add .
+   git commit -m "feat: add written license tests and mobile navigation"
+   git push origin main
