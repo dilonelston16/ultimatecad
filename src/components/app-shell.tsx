@@ -26,6 +26,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import CharacterSwitcher from "@/components/character-switcher";
 
 type AppShellProps = {
   children?: ReactNode;
@@ -44,7 +45,7 @@ type NavItem = {
 
 const globalItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Civilian", href: "/civilian", icon: CircleUserRound, status: "coming-soon" },
+  { label: "Civilian", href: "/civilian", icon: CircleUserRound },
   { label: "Banking", href: "/banking", icon: Landmark, status: "coming-soon" },
   { label: "Economy", href: "/economy", icon: BadgeDollarSign, status: "coming-soon" },
   { label: "Businesses", href: "/businesses", icon: BriefcaseBusiness, status: "coming-soon" },
@@ -121,6 +122,8 @@ export function AppShell({
             </span>
           </Link>
         </div>
+
+        <CharacterSwitcher />
 
         <div className="sidebar-section">
           <span className="section-label">Main</span>

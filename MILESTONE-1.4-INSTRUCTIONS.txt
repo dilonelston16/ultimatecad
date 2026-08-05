@@ -1,0 +1,19 @@
+ULTIMATECAD MILESTONE 1.4 — CHARACTER SYSTEM & ID ENGINE
+
+1. Extract the ZIP into C:\Projects\ultimatecad and replace files.
+2. Do NOT replace your .env.local. This ZIP does not include it.
+3. In Supabase SQL Editor, run ONLY:
+   supabase/migrations/202608050004_character_id_engine.sql
+4. Build:
+   rmdir /s /q .next
+   pnpm install
+   pnpm build
+5. Push:
+   git add .
+   git commit -m "feat: add character system and automatic ID engine"
+   git push origin main
+
+New routes:
+/civilian
+/civilian/characters/new
+/civilian/characters/[id]
