@@ -1,0 +1,18 @@
+ULTIMATECAD MILESTONE 1.5 — CIVILIAN REDESIGN + DMV
+
+1. Extract this ZIP directly into:
+   C:\Projects\ultimatecad
+
+2. Run only this new migration in Supabase SQL Editor:
+   supabase/migrations/202608050005_civilian_dmv_licensing.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm install
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "feat: redesign civilian workspace and add DMV licensing"
+   git push origin main

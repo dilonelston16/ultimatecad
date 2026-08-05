@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BadgeCheck,
   BadgeDollarSign,
   Banknote,
   BriefcaseBusiness,
@@ -52,7 +53,7 @@ const globalItems: NavItem[] = [
   { label: "Stores", href: "/stores", icon: Store, status: "coming-soon" },
   { label: "Vehicles", href: "/vehicles", icon: Car, status: "coming-soon" },
   { label: "Properties", href: "/properties", icon: Home, status: "coming-soon" },
-  { label: "Licenses", href: "/licenses", icon: Shield, status: "coming-soon" },
+  { label: "Licenses", href: "/licenses", icon: Shield },
   { label: "Weapons", href: "/weapons", icon: Package, status: "coming-soon" },
   { label: "Insurance", href: "/insurance", icon: Banknote, status: "coming-soon" },
 ];
@@ -61,6 +62,7 @@ const departmentItems: NavItem[] = [
   { label: "LEO Dashboard", href: "/agencies/law-enforcement", icon: Shield },
   { label: "Reports", href: "/agencies/law-enforcement/reports", icon: Gavel, status: "coming-soon" },
   { label: "Penal Codes", href: "/agencies/law-enforcement/penal-codes", icon: Scale, status: "coming-soon" },
+  { label: "DMV Administration", href: "/dmv", icon: BadgeCheck },
 ];
 
 const communityItems: NavItem[] = [

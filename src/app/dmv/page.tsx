@@ -1,0 +1,6 @@
+import { AppShell } from '@/components/app-shell';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import DmvQueue from './queue';
+
+export default async function DmvPage(){const supabase=await createServerSupabaseClient();const {data:{user}}=await supabase.auth.getUser();if(!user)redirect('/login?next=/dmv');const {data:membership}=await supabase.from('community_memberships').select('community_id,is_owner').eq('user_id',user.id).eq('status','active').limit(1).maybeSingle();if(!membership)redirect('/onboarding');const {data:allowed}=await supabase.rpc('has_permission',{target_community_id:membership.community_id,requested_permission:'dmv.view'});if(!membership.is_owner&&!allowed)redirect('/dashboard');const {data:apps}=await supabase.from('license_applications').select('*,character:characters(first_name,last_name,state_id),license_type:license_types(name,code,category),tests:license_tests(id,test_type,status,score)').eq('community_id',membership.community_id).order('created_at',{ascending:false});return <AppShell title="DMV Administration" subtitle="Application review, testing and credential issuance"><DmvQueue applications={apps??[]}/></AppShell>}
