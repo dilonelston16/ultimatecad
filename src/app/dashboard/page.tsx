@@ -53,6 +53,7 @@ export default async function DashboardPage() {
         <div className="content-grid two">
           <section className="panel">
             <div className="panel-title"><div><span className="eyebrow">Authorized access</span><h2>My workspaces</h2></div></div>
+            <Link className="workspace-link" href="/community/organization"><span><span className="workspace-icon">ORG</span>Organization Builder</span><ArrowRight size={18}/></Link>
             <Link className="workspace-link" href="/agencies/law-enforcement"><span><span className="workspace-icon">LEO</span>Law Enforcement — Initial Preview</span><ArrowRight size={18}/></Link>
           </section>
 

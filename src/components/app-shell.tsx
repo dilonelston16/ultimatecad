@@ -14,6 +14,7 @@ type AppShellProps = {
 
 const navigation = [
   { label: "Dashboard", href: "/dashboard" },
+  { label: "Organization Builder", href: "/community/organization" },
   { label: "Civilian", href: "/civilian" },
   { label: "Banking", href: "/banking" },
   { label: "Economy", href: "/economy" },

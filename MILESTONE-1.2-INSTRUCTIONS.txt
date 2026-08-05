@@ -1,0 +1,14 @@
+ULTIMATECAD MILESTONE 1.2 — ORGANIZATION BUILDER
+
+1. Extract this ZIP into C:\Projects\ultimatecad and replace/merge files.
+2. In Supabase SQL Editor, run ONLY:
+   supabase/migrations/202608050002_organization_builder.sql
+3. Build:
+   rmdir /s /q .next
+   pnpm build
+4. Push:
+   git add .
+   git commit -m "feat: add organization builder"
+   git push origin main
+
+Open /community/organization while signed in as the community Founder.
