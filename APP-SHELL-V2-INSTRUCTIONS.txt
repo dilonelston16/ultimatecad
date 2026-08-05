@@ -1,0 +1,33 @@
+ULTIMATECAD APP SHELL V2 FIX
+
+This patch replaces the current AppShell with an isolated CSS-module version.
+Old global .sidebar rules can no longer override the mobile drawer.
+
+1. Extract this ZIP directly into:
+   C:\Projects\ultimatecad
+
+2. Replace:
+   src\components\app-shell.tsx
+
+3. Add:
+   src\components\app-shell.module.css
+
+4. You do NOT need to edit globals.css for this patch.
+
+5. Clear cache and build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+6. Push:
+   git add .
+   git commit -m "fix: replace broken mobile shell with isolated drawer"
+   git push origin main
+
+After deployment, test at a narrow browser width:
+- Sidebar hidden by default
+- Top mobile bar visible
+- Hamburger opens drawer over content
+- Dark backdrop appears
+- X or backdrop closes drawer
+- Main content uses full screen width
