@@ -1,0 +1,17 @@
+Copy the included src folder directly into:
+
+C:\Projects\ultimatecad
+
+Allow Windows to merge folders and replace files.
+
+Then confirm these commands show file contents:
+
+type src\lib\utils.ts
+type src\lib\supabase\client.ts
+type src\lib\supabase\server.ts
+
+Then run:
+
+rmdir /s /q .next
+pnpm add clsx tailwind-merge @supabase/supabase-js @supabase/ssr
+pnpm build
