@@ -17,6 +17,8 @@ import {
   Scale,
   Settings,
   Shield,
+  KeyRound,
+  LockKeyhole,
   ShoppingBag,
   Store,
   Users,
@@ -62,6 +64,8 @@ const departmentItems: NavItem[] = [
 
 const communityItems: NavItem[] = [
   { label: "Organization Builder", href: "/community/organization", icon: Building2 },
+  { label: "Roles & Permissions", href: "/community/permissions", icon: LockKeyhole },
+  { label: "Department Access", href: "/community/access", icon: KeyRound },
   { label: "Members", href: "/community/members", icon: Users, status: "coming-soon" },
   { label: "Community Settings", href: "/community/settings", icon: Settings, status: "coming-soon" },
 ];

@@ -1,0 +1,14 @@
+ULTIMATECAD MILESTONE 1.3 — ROLES, PERMISSIONS & KEYS
+
+1. Extract into C:\Projects\ultimatecad and replace files.
+2. Run only this new SQL migration in Supabase SQL Editor:
+   supabase/migrations/202608050003_roles_permissions_keys.sql
+3. Build:
+   rmdir /s /q .next
+   pnpm build
+4. Push:
+   git add .
+   git commit -m "feat: add roles permissions and access keys"
+   git push origin main
+
+Do not rerun older migrations.
