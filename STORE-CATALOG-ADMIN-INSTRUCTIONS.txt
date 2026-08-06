@@ -1,0 +1,55 @@
+ULTIMATECAD — STORE CATALOGUE ADMINISTRATION
+
+CATALOGUE SIZE
+- 783 structured catalogue records
+- 434 GTA-style vehicle records
+- 42 property records
+- 88 clothing records
+- 205 RP/general/contraband records
+- 14 licensed weapon records
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run:
+   supabase/migrations/202608060016_store_catalog_admin.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "feat: add store catalogue administration"
+   git push origin main
+
+STORE CATALOGUE MANAGER
+
+Open:
+   /stores/admin
+
+Founders and authorized CAD staff can:
+- Create products
+- Edit products
+- Set product category and type
+- Set price and stock
+- Enable or disable products
+- Mark products restricted
+- Edit asset-generation JSON
+- Soft-delete products
+- Bulk import catalogue JSON
+
+FULL CATALOGUE
+
+The included file is:
+   data/store-catalog/full-catalog.json
+
+Paste its complete contents into the Bulk Catalogue Import box.
+
+CONTRABAND
+
+The catalogue contains fictional roleplay contraband and fictional drug items.
+It contains no real-world production, preparation, or usage instructions.
