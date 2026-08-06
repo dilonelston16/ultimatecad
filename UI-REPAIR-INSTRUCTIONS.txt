@@ -1,0 +1,27 @@
+ULTIMATECAD DMV + LICENCE UI REPAIR
+
+This patch fixes the raw browser-style appearance shown in the screenshot.
+It uses isolated CSS modules, so old global styles cannot break these pages.
+
+1. Extract this ZIP into:
+   C:\Projects\ultimatecad
+
+2. Replace:
+   src\app\dmv\dmv-management-client.tsx
+   src\app\licenses\license-application-panel.tsx
+
+3. Add:
+   src\app\dmv\dmv-management.module.css
+   src\app\licenses\license-application-panel.module.css
+
+4. No SQL is required.
+
+5. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+6. Push:
+   git add .
+   git commit -m "fix: repair DMV and licence page styling"
+   git push origin main
