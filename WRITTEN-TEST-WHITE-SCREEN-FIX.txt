@@ -1,0 +1,15 @@
+ULTIMATECAD WRITTEN TEST WHITE-SCREEN FIX
+
+1. Extract into C:\Projects\ultimatecad
+2. Replace the included files.
+3. No SQL is required.
+4. Run:
+   rmdir /s /q .next
+   pnpm build
+5. Push:
+   git add .
+   git commit -m "fix: prevent written test white screen"
+   git push origin main
+
+The page now falls back to a direct question query and shows exact errors
+instead of a blank screen.

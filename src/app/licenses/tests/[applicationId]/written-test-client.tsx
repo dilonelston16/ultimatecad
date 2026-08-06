@@ -21,6 +21,7 @@ type Props = {
   questions: Question[];
   characterName: string;
   stateId: string;
+  loadError?: string;
 };
 
 export default function WrittenTestClient({
@@ -29,6 +30,7 @@ export default function WrittenTestClient({
   questions,
   characterName,
   stateId,
+  loadError = "",
 }: Props) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
@@ -37,7 +39,7 @@ export default function WrittenTestClient({
   const [result, setResult] = useState<{ score: number; passed: boolean } | null>(
     alreadyPassed ? { score: 100, passed: true } : null
   );
-  const [error, setError] = useState("");
+  const [error, setError] = useState(loadError);
 
   const answered = useMemo(
     () => questions.filter((question) => answers[question.id]).length,
@@ -55,32 +57,44 @@ export default function WrittenTestClient({
     setBusy(true);
     setError("");
 
-    const response = await fetch("/api/licenses/tests/written", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ applicationId, answers }),
-    });
-    const body = await response.json();
-    setBusy(false);
+    try {
+      const response = await fetch("/api/licenses/tests/written", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ applicationId, answers }),
+      });
 
-    if (!response.ok) {
-      setError(body.error ?? "The written test could not be submitted.");
-      return;
+      const text = await response.text();
+      let body: any = {};
+      try { body = text ? JSON.parse(text) : {}; } catch {}
+
+      if (!response.ok) {
+        throw new Error(body.error || `The written test could not be submitted (${response.status}).`);
+      }
+
+      setResult({
+        score: Number(body.score ?? 0),
+        passed: Boolean(body.passed),
+      });
+      router.refresh();
+    } catch (submissionError) {
+      setError(
+        submissionError instanceof Error
+          ? submissionError.message
+          : "The written test could not be submitted."
+      );
+    } finally {
+      setBusy(false);
     }
-
-    setResult({ score: Number(body.score), passed: Boolean(body.passed) });
-    router.refresh();
   }
 
-  if (!questions.length) {
+  if (!questions.length || !current) {
     return (
-      <section className="panel written-test-empty">
+      <section className="written-test-empty">
         <AlertTriangle />
-        <h2>No questions are configured</h2>
-        <p>A community administrator must add questions for this license type.</p>
-        <Link href="/licenses" className="button">
-          Return to licenses
-        </Link>
+        <h2>Written test unavailable</h2>
+        <p>{loadError || "No questions are configured for this license type."}</p>
+        <Link href="/licenses" className="button">Return to licenses</Link>
       </section>
     );
   }
@@ -89,14 +103,12 @@ export default function WrittenTestClient({
     return (
       <section className={`written-test-result ${result.passed ? "passed" : "failed"}`}>
         {result.passed ? <CheckCircle2 /> : <AlertTriangle />}
-        <span className="eyebrow">
-          {result.passed ? "TEST PASSED" : "TEST FAILED"}
-        </span>
+        <span className="eyebrow">{result.passed ? "TEST PASSED" : "TEST FAILED"}</span>
         <h2>{result.score.toFixed(0)}%</h2>
         <p>
           {result.passed
-            ? "Your written requirement is complete. Complete any practical requirement before DMV approval."
-            : "A passing score is 80%. Review the material and retake the test when ready."}
+            ? "Your written requirement is complete."
+            : "A passing score is 80%. Review the material and retake the test."}
         </p>
         <div className="written-result-actions">
           {!result.passed && (
@@ -106,14 +118,13 @@ export default function WrittenTestClient({
                 setAnswers({});
                 setIndex(0);
                 setResult(null);
+                setError("");
               }}
             >
               Retake test
             </button>
           )}
-          <Link href="/licenses" className="button ghost">
-            Return to licenses
-          </Link>
+          <Link href="/licenses" className="button ghost">Return to licenses</Link>
         </div>
       </section>
     );
@@ -130,14 +141,12 @@ export default function WrittenTestClient({
     <div className="written-test-page">
       <section className="written-test-header">
         <div>
-          <span className="eyebrow">OFFICIAL WRITTEN EXAM</span>
+          <span className="eyebrow">Official written exam</span>
           <h2>{characterName}</h2>
           <p>{stateId}</p>
         </div>
         <div className="written-progress-copy">
-          <strong>
-            {answered}/{questions.length}
-          </strong>
+          <strong>{answered}/{questions.length}</strong>
           <span>answered</span>
         </div>
       </section>
@@ -172,24 +181,24 @@ export default function WrittenTestClient({
 
         <div className="written-test-nav">
           <button
+            type="button"
             className="button ghost"
             disabled={index === 0}
             onClick={() => setIndex((value) => value - 1)}
           >
-            <ChevronLeft size={17} />
-            Previous
+            <ChevronLeft size={17} /> Previous
           </button>
 
           {index < questions.length - 1 ? (
             <button
+              type="button"
               className="button"
               onClick={() => setIndex((value) => value + 1)}
             >
-              Next
-              <ChevronRight size={17} />
+              Next <ChevronRight size={17} />
             </button>
           ) : (
-            <button className="button" disabled={busy} onClick={submit}>
+            <button type="button" className="button" disabled={busy} onClick={submit}>
               {busy ? "Scoring…" : "Submit test"}
             </button>
           )}
