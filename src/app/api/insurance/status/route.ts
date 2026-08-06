@@ -17,14 +17,11 @@ export async function POST(request: Request) {
   const body = await request.json();
 
   const { data, error } = await supabase.rpc(
-    "create_vehicle_insurance_policy",
+    "update_insurance_policy_status",
     {
-      p_character_id: body.characterId,
-      p_vehicle_id: body.vehicleId,
-      p_plan_preset_id: body.planPresetId,
-      p_provider_name: body.providerName || "Los Santos Mutual",
-      p_auto_renew: Boolean(body.autoRenew),
-      p_notes: body.notes || null,
+      p_policy_id: body.policyId,
+      p_status: body.status,
+      p_reason: body.reason || null,
     }
   );
 

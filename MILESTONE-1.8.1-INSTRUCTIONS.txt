@@ -1,0 +1,43 @@
+ULTIMATECAD MILESTONE 1.8.1 — INSURANCE PRESET PLANS
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run only:
+   supabase/migrations/202608060003_insurance_plan_presets.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "feat: add preset insurance coverage plans"
+   git push origin main
+
+DEFAULT PLANS
+Liability:
+- Premium $250
+- Deductible $2,500
+- Coverage limit $25,000
+
+Standard:
+- Premium $600
+- Deductible $1,500
+- Coverage limit $75,000
+
+Full Coverage:
+- Premium $1,000
+- Deductible $750
+- Coverage limit $150,000
+
+Premium:
+- Premium $1,800
+- Deductible $250
+- Coverage limit $350,000
+
+Commercial Fleet:
+- Premium $2,500
+- Deductible $2,000
+- Coverage limit $500,000
