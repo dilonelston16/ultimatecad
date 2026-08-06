@@ -5,22 +5,43 @@ import {
   BriefcaseBusiness,
   Building2,
   Plus,
+  Store,
   Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import styles from "./businesses.module.css";
+
+type Props = {
+  character: any;
+  businesses: any[];
+  loadError?: string;
+};
 
 export default function BusinessesClient({
   character,
   businesses,
-}: any) {
+  loadError = "",
+}: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(loadError);
   const [busy, setBusy] = useState(false);
+  const [selectedId, setSelectedId] = useState(
+    businesses[0]?.id ?? ""
+  );
 
-  async function createBusiness(event: React.FormEvent<HTMLFormElement>) {
+  const selected = useMemo(
+    () =>
+      businesses.find((business) => business.id === selectedId) ??
+      businesses[0] ??
+      null,
+    [businesses, selectedId]
+  );
+
+  async function createBusiness(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
     setBusy(true);
     setMessage("");
@@ -44,11 +65,13 @@ export default function BusinessesClient({
     setBusy(false);
 
     if (!response.ok) {
-      setMessage(body.error || "Business registration failed.");
+      setMessage(
+        body.error || "Business registration could not be completed."
+      );
       return;
     }
 
-    setMessage("Business registered.");
+    setMessage("Business registered successfully.");
     setOpen(false);
     router.refresh();
   }
@@ -63,25 +86,27 @@ export default function BusinessesClient({
             {businesses.length === 1 ? "" : "es"}
           </h2>
           <p>
-            Manage ownership, business accounts, employees, payroll, and
-            operating status.
+            Manage ownership, operating accounts, employees, stores,
+            and payroll.
           </p>
         </div>
 
-        <button onClick={() => setOpen(!open)}>
+        <button onClick={() => setOpen((value) => !value)}>
           <Plus size={17} />
           Register business
         </button>
       </section>
 
-      {message && <div className={styles.message}>{message}</div>}
+      {message && (
+        <div className={styles.message}>{message}</div>
+      )}
 
       {open && (
         <form className={styles.form} onSubmit={createBusiness}>
           <header>
             <h3>Register a new business</h3>
             <p>
-              A business number and operating bank account are generated
+              The business number and operating account are generated
               automatically.
             </p>
           </header>
@@ -123,86 +148,189 @@ export default function BusinessesClient({
         </form>
       )}
 
-      <section className={styles.grid}>
-        {businesses.length ? (
-          businesses.map((business: any) => {
-            const account = Array.isArray(business.bank_account)
-              ? business.bank_account[0]
-              : business.bank_account;
-            const members = business.members ?? [];
+      {businesses.length > 1 && (
+        <section className={styles.selector}>
+          <label>
+            Selected business
+            <select
+              value={selected?.id ?? ""}
+              onChange={(event) => setSelectedId(event.target.value)}
+            >
+              {businesses.map((business) => (
+                <option key={business.id} value={business.id}>
+                  {business.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </section>
+      )}
 
-            return (
-              <article key={business.id}>
-                <header>
-                  <div className={styles.icon}>
-                    <Building2 />
-                  </div>
+      {selected ? (
+        <>
+          <section className={styles.businessHeader}>
+            <div className={styles.icon}>
+              <Building2 />
+            </div>
 
-                  <div>
-                    <span>{business.business_type}</span>
-                    <h3>{business.name}</h3>
-                    <code>{business.business_number}</code>
-                  </div>
+            <div>
+              <span>{selected.business_type}</span>
+              <h2>{selected.name}</h2>
+              <code>{selected.business_number}</code>
+            </div>
 
-                  <b className={styles[business.status] || styles.status}>
-                    {business.status}
-                  </b>
-                </header>
+            <b
+              className={
+                styles[selected.status] ?? styles.status
+              }
+            >
+              {selected.status}
+            </b>
+          </section>
 
-                <p>{business.description || "No description provided."}</p>
+          <section className={styles.stats}>
+            <article>
+              <Banknote />
+              <span>Available balance</span>
+              <strong>
+                $
+                {Number(
+                  selected.bank_account?.available_balance ?? 0
+                ).toLocaleString()}
+              </strong>
+            </article>
 
-                <dl>
-                  <div>
-                    <dt>Business account</dt>
-                    <dd>{account?.account_number ?? "Not connected"}</dd>
-                  </div>
-                  <div>
-                    <dt>Available balance</dt>
-                    <dd>
-                      $
-                      {Number(
-                        account?.available_balance ?? 0
-                      ).toLocaleString()}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Employees</dt>
-                    <dd>{members.length}</dd>
-                  </div>
-                  <div>
-                    <dt>Address</dt>
-                    <dd>{business.address || "—"}</dd>
-                  </div>
-                </dl>
+            <article>
+              <Users />
+              <span>Active employees</span>
+              <strong>
+                {(selected.members ?? []).filter(
+                  (member: any) => member.status === "active"
+                ).length}
+              </strong>
+            </article>
 
-                <div className={styles.summary}>
-                  <span>
-                    <Banknote />
-                    Business banking connected
-                  </span>
-                  <span>
-                    <Users />
-                    Employee and payroll foundation active
-                  </span>
-                  <span>
-                    <BriefcaseBusiness />
-                    Owner and management record active
-                  </span>
+            <article>
+              <Store />
+              <span>Stores</span>
+              <strong>{selected.stores?.length ?? 0}</strong>
+            </article>
+
+            <article>
+              <BriefcaseBusiness />
+              <span>Ownership</span>
+              <strong>
+                {selected.owner_character_id === character.id
+                  ? "Owner"
+                  : "Employee"}
+              </strong>
+            </article>
+          </section>
+
+          <div className={styles.columns}>
+            <section className={styles.panel}>
+              <header>
+                <h3>Business details</h3>
+              </header>
+
+              <dl className={styles.details}>
+                <div>
+                  <dt>Operating account</dt>
+                  <dd>
+                    {selected.bank_account?.account_number ??
+                      "Account repair required"}
+                  </dd>
                 </div>
-              </article>
-            );
-          })
-        ) : (
-          <div className={styles.empty}>
-            <BriefcaseBusiness size={44} />
-            <h3>No businesses found</h3>
-            <p>
-              Register a business to create its operating account and owner
-              record.
-            </p>
+                <div>
+                  <dt>Account status</dt>
+                  <dd>
+                    {selected.bank_account?.status ?? "Unavailable"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Address</dt>
+                  <dd>{selected.address || "Not set"}</dd>
+                </div>
+                <div>
+                  <dt>Phone</dt>
+                  <dd>{selected.phone || "Not set"}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section className={styles.panel}>
+              <header>
+                <h3>Employees</h3>
+              </header>
+
+              <div className={styles.list}>
+                {(selected.members ?? []).length ? (
+                  selected.members.map((member: any) => {
+                    const rawPerson = member.character;
+                    const person = Array.isArray(rawPerson)
+                      ? rawPerson[0]
+                      : rawPerson;
+
+                    return (
+                      <article key={member.id}>
+                        <div>
+                          <b>
+                            {person?.first_name} {person?.last_name}
+                          </b>
+                          <span>
+                            {member.role_name} · {member.pay_type}
+                          </span>
+                          <code>{person?.state_id}</code>
+                        </div>
+
+                        <strong>
+                          ${Number(member.pay_rate).toLocaleString()}
+                        </strong>
+                      </article>
+                    );
+                  })
+                ) : (
+                  <p>No employee records found.</p>
+                )}
+              </div>
+            </section>
           </div>
-        )}
-      </section>
+
+          <section className={styles.panel}>
+            <header>
+              <h3>Stores</h3>
+            </header>
+
+            <div className={styles.storeGrid}>
+              {(selected.stores ?? []).length ? (
+                selected.stores.map((store: any) => (
+                  <article key={store.id}>
+                    <Store />
+                    <div>
+                      <b>{store.name}</b>
+                      <span>
+                        {store.description || "No description"}
+                      </span>
+                    </div>
+                    <strong>{store.status}</strong>
+                  </article>
+                ))
+              ) : (
+                <p>No stores have been created for this business.</p>
+              )}
+            </div>
+          </section>
+        </>
+      ) : (
+        <div className={styles.empty}>
+          <BriefcaseBusiness size={44} />
+          <h3>No businesses found</h3>
+          <p>
+            Register a business to create its ownership record and
+            operating bank account.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

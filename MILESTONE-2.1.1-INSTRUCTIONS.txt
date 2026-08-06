@@ -1,0 +1,45 @@
+ULTIMATECAD MILESTONE 2.1.1 — BUSINESS REPAIR
+
+WHY THE BUSINESS PAGE FAILED
+The previous page attempted to filter businesses through an embedded
+business_members relationship inside one PostgREST .or() query. That query is
+not reliable and can fail before the page renders.
+
+THIS PATCH
+- Loads owned businesses and employee memberships separately.
+- Loads accounts, employees, and stores separately.
+- Combines those records on the server.
+- Repairs missing owner memberships.
+- Repairs missing business operating accounts.
+- Restores owner RLS access to businesses, employees, and business accounts.
+- Shows database errors on the page instead of silently redirecting.
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run:
+   supabase/migrations/202608060007_repair_existing_businesses.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "fix: repair registered business loading"
+   git push origin main
+
+AFTER DEPLOYMENT
+Open:
+   /businesses
+
+The business you already registered should display with its:
+- Business number
+- Operating bank account
+- Balance
+- Employees
+- Stores
+- Ownership status
