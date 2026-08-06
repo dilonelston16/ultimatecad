@@ -1,0 +1,36 @@
+ULTIMATECAD — STORE ADMIN VISIBILITY + AUTOMATIC FULL CATALOGUE
+
+WHY YOU DID NOT SEE THE BUTTON OR ITEMS
+
+1. The catalogue manager existed only at /stores/admin and was not linked.
+2. The 783-item JSON catalogue was included for manual import but
+   was not installed automatically.
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. If migration 202608060016 has not been run, run:
+   supabase/migrations/202608060016_store_catalog_admin.sql
+
+3. Then run:
+   supabase/migrations/202608060017_auto_install_full_catalog.sql
+
+4. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+5. Push:
+   git add .
+   git commit -m "fix: expose store admin and install full catalogue"
+   git push origin main
+
+AFTER DEPLOYMENT
+
+- Open /stores
+- Founders and authorized CAD staff will see Create / Manage Products
+- The sidebar will show Store Catalogue Admin
+- Open /stores/admin directly to create, edit, disable, delete, and import items
+- The full catalogue is installed by SQL automatically

@@ -54,7 +54,7 @@ const sharedItems: NavItem[] = [
   { label: "Economy", href: "/economy", icon: BadgeDollarSign },
   { label: "Businesses", href: "/businesses", icon: BriefcaseBusiness },
   { label: "Stores", href: "/stores", icon: Store },
-  { label: "Inventory & Assets", href: "/inventory", icon: Package },
+  { label: "Store Catalogue Admin", href: "/stores/admin", icon: Package },
   { label: "Vehicles", href: "/vehicles", icon: Car },
   { label: "Properties", href: "/properties", icon: Home },
   { label: "Licenses", href: "/licenses", icon: Shield },
