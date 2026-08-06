@@ -1,0 +1,42 @@
+ULTIMATECAD — INVENTORY QUANTITY + BUSINESS PURCHASE FIX
+
+WHAT WAS WRONG
+
+1. Personal purchases inserted new rows every time, so identical items appeared
+   separately instead of as one item with a quantity.
+
+2. Business purchases could roll back while crediting the selling business
+   account. The buyer was incorrectly required to have management permission
+   over the seller's business.
+
+3. There was no Use Item action.
+
+WHAT THIS PATCH DOES
+
+- Consolidates existing duplicate personal inventory rows.
+- Consolidates duplicate business inventory rows.
+- Stacks future personal purchases by character and product.
+- Stacks future business purchases by business and product.
+- Repairs the seller-credit transaction flow.
+- Ensures business purchases appear in Business > Inventory.
+- Keeps the Add to Store action working.
+- Adds Use Item, which removes one unlisted quantity.
+- Prevents using quantities reserved for marketplace listings.
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run:
+   supabase/migrations/202608060014_inventory_quantity_business_purchase_fix.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "fix: stack inventory and repair business purchases"
+   git push origin main
