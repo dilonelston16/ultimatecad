@@ -53,11 +53,11 @@ const sharedItems: NavItem[] = [
   { label: "Economy", href: "/economy", icon: BadgeDollarSign, comingSoon: true },
   { label: "Businesses", href: "/businesses", icon: BriefcaseBusiness, comingSoon: true },
   { label: "Stores", href: "/stores", icon: Store, comingSoon: true },
-  { label: "Vehicles", href: "/vehicles", icon: Car, comingSoon: true },
+  { label: "Vehicles", href: "/vehicles", icon: Car },
   { label: "Properties", href: "/properties", icon: Home, comingSoon: true },
   { label: "Licenses", href: "/licenses", icon: Shield },
   { label: "Weapons", href: "/weapons", icon: Package, comingSoon: true },
-  { label: "Insurance", href: "/insurance", icon: Banknote, comingSoon: true },
+  { label: "Insurance", href: "/insurance", icon: Banknote },
 ];
 
 const departmentItems: NavItem[] = [

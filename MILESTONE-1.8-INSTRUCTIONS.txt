@@ -1,0 +1,31 @@
+ULTIMATECAD MILESTONE 1.8 — VEHICLES AND INSURANCE
+
+1. Extract this ZIP directly into:
+   C:\Projects\ultimatecad
+
+2. Allow Windows to merge folders and replace files.
+
+3. Run only this migration in Supabase SQL Editor:
+   supabase/migrations/202608060002_vehicles_insurance.sql
+
+4. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+5. Push:
+   git add .
+   git commit -m "feat: add vehicle registration and insurance"
+   git push origin main
+
+WHAT THIS ADDS
+- Vehicle registration and ownership
+- Automatic VIN, registration and plate values
+- Vehicle status history
+- Report stolen and mark recovered
+- Ownership transfer requests
+- Insurance policies with generated policy numbers
+- Coverage, premium, deductible and expiration
+- Civilian Vehicles and Insurance pages
+- LEO/DMV-ready vehicle lookup indexes
+- Permission and RLS support
