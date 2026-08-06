@@ -1,0 +1,23 @@
+ULTIMATECAD MILESTONE 2.1 — ECONOMY OPERATIONS
+
+1. Extract into C:\Projects\ultimatecad
+2. Run only:
+   supabase/migrations/202608060006_economy_operations.sql
+3. Build:
+   rmdir /s /q .next
+   pnpm build
+4. Push:
+   git add .
+   git commit -m "feat: add economy operations"
+   git push origin main
+
+Adds:
+- Business employees by State ID
+- Employee roles and pay rates
+- Remove/terminate employees
+- Payroll draft creation
+- Payroll tax and net-pay calculations
+- Payroll deposits from business accounts
+- Store creation
+- Store product backend with SKU, price and stock
+- Economy audit log
