@@ -1,0 +1,49 @@
+ULTIMATECAD MILESTONE 2.0.2 — DMV WORKFLOW + BUSINESS PAGE FIX
+
+This patch fixes:
+1. Applications not appearing for DMV approval.
+2. No DMV character search.
+3. No practical-test controls.
+4. Businesses redirecting back to the previous Economy page.
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Allow Windows to replace the included files.
+
+3. No new SQL migration is required.
+   This patch uses the record_license_test RPC installed by the complete DMV
+   schema rebuild.
+
+4. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+5. Push:
+   git add .
+   git commit -m "fix: complete DMV review flow and business page"
+   git push origin main
+
+DMV FLOW AFTER PATCH
+
+Application submitted
+-> Written exam completed
+-> DMV records practical pass/fail
+-> Application shows Ready for approval
+-> Approve and issue becomes enabled
+-> Licence is created
+-> Application leaves the active queue
+
+BUSINESS TAB AFTER PATCH
+
+/businesses opens a real page showing:
+- Registered businesses
+- Generated business number
+- Business bank account
+- Balance
+- Employees
+- Status
+- Register Business form

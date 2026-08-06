@@ -5,6 +5,7 @@ import DmvManagementClient from "./dmv-management-client";
 
 export default async function DmvPage() {
   const supabase = await createServerSupabaseClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -25,51 +26,60 @@ export default async function DmvPage() {
   let canManageDmv = membership.is_owner === true;
 
   if (!canManageDmv) {
-    const { data: allowed, error: permissionError } = await supabase.rpc(
-      "has_permission",
-      {
-        target_community_id: membership.community_id,
-        requested_permission: "dmv.manage",
-      }
-    );
-
-    if (permissionError) {
-      console.error("DMV permission check failed:", permissionError.message);
-    }
+    const { data: allowed } = await supabase.rpc("has_permission", {
+      target_community_id: membership.community_id,
+      requested_permission: "dmv.manage",
+    });
 
     canManageDmv = allowed === true;
   }
 
-  if (!canManageDmv) redirect("/dashboard?error=dmv_access_required");
+  if (!canManageDmv) {
+    redirect("/dashboard?error=dmv_access_required");
+  }
 
   const { data: applications } = await supabase
     .from("license_applications")
     .select(
-      "id,application_number,status,written_status,practical_status,created_at,character:characters(first_name,last_name,state_id),license_type:license_types(name,code)"
+      "id,application_number,status,written_status,practical_status,created_at,updated_at,character:characters(id,first_name,last_name,state_id,date_of_birth),license_type:license_types(id,name,code,category,requires_written_test,requires_practical_test)"
     )
     .eq("community_id", membership.community_id)
-    .eq("status", "ready_for_review")
-    .order("created_at");
+    .in("status", [
+      "pending",
+      "submitted",
+      "testing",
+      "ready_for_review",
+      "under_review",
+    ])
+    .order("updated_at", { ascending: false });
 
   const { data: licenses } = await supabase
     .from("licenses")
     .select(
-      "id,license_number,status,points,issued_at,expires_at,character:characters(first_name,last_name,state_id),license_type:license_types(name,code,category)"
+      "id,license_number,status,points,issued_at,expires_at,character_id,license_type_id,character:characters(id,first_name,last_name,state_id,date_of_birth),license_type:license_types(id,name,code,category)"
     )
     .eq("community_id", membership.community_id)
     .order("issued_at", { ascending: false });
 
+  const { data: characters } = await supabase
+    .from("characters")
+    .select(
+      "id,first_name,last_name,state_id,date_of_birth,is_archived,created_at"
+    )
+    .eq("community_id", membership.community_id)
+    .order("last_name")
+    .order("first_name");
+
   return (
     <AppShell
       title="DMV Administration"
-      subtitle="Review applications and manage issued licenses."
+      subtitle="Search character records, manage tests, approve applications, and control issued licences."
     >
-      <div className="dmv-admin-page">
-        <DmvManagementClient
-          applications={applications ?? []}
-          licenses={licenses ?? []}
-        />
-      </div>
+      <DmvManagementClient
+        applications={applications ?? []}
+        licenses={licenses ?? []}
+        characters={characters ?? []}
+      />
     </AppShell>
   );
 }
