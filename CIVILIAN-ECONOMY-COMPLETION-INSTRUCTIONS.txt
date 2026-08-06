@@ -1,0 +1,24 @@
+ULTIMATECAD — CIVILIAN + ECONOMY COMPLETION UPDATE
+
+This package is built from the uploaded uwncad(4).zip project.
+
+INSTALL
+1. Back up your current project.
+2. Extract this ZIP over C:\Projects\ultimatecad and replace files.
+3. Run only this new migration in Supabase SQL Editor:
+   supabase/migrations/202608060008_civilian_economy_completion.sql
+4. Build:
+   rmdir /s /q .next
+   pnpm build
+5. Push:
+   git add .
+   git commit -m "feat: complete civilian and economy modules"
+   git push origin main
+
+NEW WORKING ROUTES
+/weapons
+/properties
+/marketplace
+/stores
+
+Also activates /economy, /stores, /properties and /weapons in navigation.

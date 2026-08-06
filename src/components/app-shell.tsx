@@ -18,6 +18,7 @@ import {
   LogOut,
   Menu,
   Package,
+  ShoppingBag,
   Scale,
   Settings,
   Shield,
@@ -50,14 +51,15 @@ const sharedItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Civilian", href: "/civilian", icon: CircleUserRound },
   { label: "Banking", href: "/banking", icon: Landmark },
-  { label: "Economy", href: "/economy", icon: BadgeDollarSign, comingSoon: true },
+  { label: "Economy", href: "/economy", icon: BadgeDollarSign },
   { label: "Businesses", href: "/businesses", icon: BriefcaseBusiness },
-  { label: "Stores", href: "/stores", icon: Store, comingSoon: true },
+  { label: "Stores", href: "/stores", icon: Store },
   { label: "Vehicles", href: "/vehicles", icon: Car },
-  { label: "Properties", href: "/properties", icon: Home, comingSoon: true },
+  { label: "Properties", href: "/properties", icon: Home },
   { label: "Licenses", href: "/licenses", icon: Shield },
-  { label: "Weapons", href: "/weapons", icon: Package, comingSoon: true },
+  { label: "Weapons", href: "/weapons", icon: Package },
   { label: "Insurance", href: "/insurance", icon: Banknote },
+  { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
 ];
 
 const departmentItems: NavItem[] = [

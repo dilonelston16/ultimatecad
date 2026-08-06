@@ -1,11 +1,2 @@
-import { AppShell } from "@/components/app-shell";
-export default function StoresPage(){
-  return <AppShell title="Stores" subtitle="Community marketplace">
-    <div style={{padding:24}}>
-      <section style={{padding:24,border:"1px solid #203b5d",borderRadius:16,background:"#08172b"}}>
-        <h2>Store management foundation is installed</h2>
-        <p style={{color:"#839bb7"}}>Products, stock, purchases, taxes, sales and character inventory are now supported by the database. The full store catalogue and management interface will be expanded in the next operational UI pass.</p>
-      </section>
-    </div>
-  </AppShell>;
-}
+import {AppShell} from "@/components/app-shell"; import {createServerSupabaseClient} from "@/lib/supabase/server"; import {redirect} from "next/navigation"; import Client from "./stores-client";
+export default async function Page(){const s=await createServerSupabaseClient();const {data:{user}}=await s.auth.getUser();if(!user)redirect('/login?next=/stores');const {data:m}=await s.from('community_memberships').select('community_id').eq('user_id',user.id).eq('status','active').limit(1).maybeSingle();if(!m)redirect('/onboarding');const {data:a}=await s.from('active_characters').select('character:characters(id,first_name,last_name,state_id)').eq('community_id',m.community_id).eq('user_id',user.id).maybeSingle();const c=Array.isArray(a?.character)?a?.character[0]:a?.character;if(!c)redirect('/civilian');const [{data:products},{data:accounts}]=await Promise.all([s.from('store_products').select('*,store:stores(name,status)').eq('community_id',m.community_id).eq('active',true).gt('stock_quantity',0).order('name'),s.from('bank_accounts').select('id,name,account_number,available_balance').eq('character_id',c.id).eq('status','active')]);return <AppShell title="Stores" subtitle="Community marketplace and inventory"><Client character={c} products={products??[]} accounts={accounts??[]}/></AppShell>}
