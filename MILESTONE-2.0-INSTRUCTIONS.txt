@@ -1,0 +1,25 @@
+ULTIMATECAD MILESTONE 2.0 — FULL ECONOMY FOUNDATION
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run only:
+   supabase/migrations/202608060005_full_economy_foundation.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "feat: add full economy foundation"
+   git push origin main
+
+IMPORTANT
+This is a large foundation milestone. It installs the schema and working civilian
+economy dashboard, business registration and loan application flow.
+
+The scheduled-payment worker, admin loan-review UI, full payroll processor and
+full store catalogue management UI are database-ready but still need their
+operational worker/admin pages in later milestones.

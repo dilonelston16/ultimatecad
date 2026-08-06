@@ -1,0 +1,34 @@
+ULTIMATECAD MILESTONE 2.0.1 — ECONOMY SCHEMA COMPATIBILITY FIX
+
+WHY THE SQL FAILED
+Your database does not yet contain public.departments. The previous economy
+migration tried to create foreign keys to that missing table.
+
+WHAT CHANGED
+The department_id fields remain available as UUID columns, but no foreign key
+is added yet. When the organization/department schema is finalized, a later
+migration can safely connect them.
+
+INSTALL
+
+1. Extract this ZIP into:
+   C:\Projects\ultimatecad
+
+2. In Supabase SQL Editor, run the corrected migration:
+   supabase/migrations/202608060005_full_economy_foundation.sql
+
+3. Do not run the old copy of that migration.
+
+4. The failed transaction should have rolled back automatically. Only run this
+   optional hotfix if tables were created manually outside the failed transaction:
+   supabase/hotfixes/202608060006_remove_missing_department_foreign_keys.sql
+
+5. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+6. Push:
+   git add .
+   git commit -m "fix: remove unavailable department foreign keys"
+   git push origin main
