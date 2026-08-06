@@ -1,0 +1,32 @@
+ULTIMATECAD — STORE, INVENTORY, AND MARKETPLACE OVERHAUL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run:
+   supabase/migrations/202608060012_store_inventory_marketplace_overhaul.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "feat: overhaul stores inventory and marketplace"
+   git push origin main
+
+WHAT THIS ADDS
+- New /inventory route showing items, vehicles, weapons, properties, and businesses.
+- Marketplace dropdowns only display assets actually owned by the active character.
+- Server-side ownership validation prevents fake asset listings.
+- Store groups: Government, General Stores, and Business Stores.
+- Product categories inside every store.
+- Business store purchases route revenue to the business operating account.
+- Vehicle, weapon, property, item, service, and document product types.
+- Purchases of vehicle/weapon/property products create actual owned records.
+- Large government catalogue of GTA vehicles, licensed weapons, and properties.
+- Founder/admin restock controls for system stores.
+- owner_purchase_restriction foundation is included but disabled by default.
+  Later, set it true on selected general stores to restrict purchases to active
+  business owners.

@@ -1,2 +1,32 @@
-import {AppShell} from "@/components/app-shell"; import {createServerSupabaseClient} from "@/lib/supabase/server"; import {redirect} from "next/navigation"; import Client from "./stores-client";
-export default async function Page(){const s=await createServerSupabaseClient();const {data:{user}}=await s.auth.getUser();if(!user)redirect('/login?next=/stores');const {data:m}=await s.from('community_memberships').select('community_id').eq('user_id',user.id).eq('status','active').limit(1).maybeSingle();if(!m)redirect('/onboarding');const {data:a}=await s.from('active_characters').select('character:characters(id,first_name,last_name,state_id)').eq('community_id',m.community_id).eq('user_id',user.id).maybeSingle();const c=Array.isArray(a?.character)?a?.character[0]:a?.character;if(!c)redirect('/civilian');const [{data:products},{data:accounts}]=await Promise.all([s.from('store_products').select('*,store:stores(name,status)').eq('community_id',m.community_id).eq('active',true).gt('stock_quantity',0).order('name'),s.from('bank_accounts').select('id,name,account_number,available_balance').eq('character_id',c.id).eq('status','active')]);return <AppShell title="Stores" subtitle="Community marketplace and inventory"><Client character={c} products={products??[]} accounts={accounts??[]}/></AppShell>}
+import { AppShell } from "@/components/app-shell";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import StoresClient from "./stores-client";
+
+export default async function StoresPage(){
+  const supabase=await createServerSupabaseClient();
+  const {data:{user}}=await supabase.auth.getUser();
+  if(!user)redirect("/login?next=/stores");
+
+  const {data:membership}=await supabase.from("community_memberships").select("community_id,is_owner").eq("user_id",user.id).eq("status","active").order("created_at").limit(1).maybeSingle();
+  if(!membership)redirect("/onboarding");
+
+  const {data:active}=await supabase.from("active_characters").select("character:characters(id,first_name,last_name,state_id)").eq("community_id",membership.community_id).eq("user_id",user.id).maybeSingle();
+  const raw=active?.character; const character=Array.isArray(raw)?raw[0]:raw;
+  if(!character)redirect("/civilian");
+
+  const [{data:stores},{data:accounts}]=await Promise.all([
+    supabase.from("stores").select("*,business:businesses(id,name,business_number,owner_character_id),products:store_products(*)").eq("community_id",membership.community_id).eq("status","active").order("store_type").order("name"),
+    supabase.from("bank_accounts").select("id,name,account_number,available_balance,status").eq("character_id",character.id).eq("status","active").order("opened_at")
+  ]);
+
+  let canRestock=membership.is_owner===true;
+  if(!canRestock){
+    const {data}=await supabase.rpc("has_permission",{target_community_id:membership.community_id,requested_permission:"stores.restock"});
+    canRestock=data===true;
+  }
+
+  return <AppShell title="Stores" subtitle="Government, general, and independently owned business storefronts.">
+    <StoresClient character={character} stores={stores??[]} accounts={accounts??[]} canRestock={canRestock}/>
+  </AppShell>;
+}
