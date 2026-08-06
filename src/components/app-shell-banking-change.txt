@@ -1,0 +1,11 @@
+APP SHELL CHANGE
+
+In src/components/app-shell.tsx, replace:
+
+{ label: "Banking", href: "/banking", icon: Landmark, comingSoon: true },
+
+with:
+
+{ label: "Banking", href: "/banking", icon: Landmark },
+
+If your current AppShell already shows Banking without "Soon", no change is needed.

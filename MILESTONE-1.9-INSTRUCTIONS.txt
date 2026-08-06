@@ -1,0 +1,34 @@
+ULTIMATECAD MILESTONE 1.9 — BANKING
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run only:
+   supabase/migrations/202608060004_banking_accounts_transactions.sql
+
+3. Open:
+   src\components\app-shell-banking-change.txt
+
+   Apply the one-line AppShell change if Banking still shows "Soon".
+   Then delete app-shell-banking-change.txt.
+
+4. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+5. Push:
+   git add .
+   git commit -m "feat: add banking accounts and transactions"
+   git push origin main
+
+WHAT THIS ADDS
+- Checking and savings accounts
+- Generated account numbers
+- Account balances and available balances
+- Immediate account transfers
+- Immutable transaction ledger
+- Account holds foundation
+- Freeze, restrict and close foundations
+- Insurance premium, payroll, tax, fine and loan transaction types
+- Civilian banking dashboard
