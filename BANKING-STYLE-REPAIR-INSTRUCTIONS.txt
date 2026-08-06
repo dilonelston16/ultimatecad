@@ -1,0 +1,34 @@
+ULTIMATECAD — REGULAR BANKING PAGE STYLE REPAIR
+
+CAUSE
+The Economy Administration update replaced src/app/banking/banking.module.css
+with an incomplete stylesheet. The regular Banking page therefore appeared as
+raw HTML. Banking Admin uses a separate stylesheet and was unaffected.
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Replace:
+   src\app\banking\banking.module.css
+
+3. No SQL is required.
+
+4. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+5. Push:
+   git add .
+   git commit -m "fix: restore regular banking page styling"
+   git push origin main
+
+THIS DOES NOT CHANGE
+- Banking Admin
+- Account balances
+- Starting balance
+- Transactions
+- Freeze or seizure controls
+- Store catalogue
