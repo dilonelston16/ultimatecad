@@ -1,0 +1,36 @@
+ULTIMATECAD — BUSINESS INVENTORY SCHEMA + UI FIX
+
+This fixes both screenshot issues:
+
+1. "column business_inventory.created_at does not exist"
+2. Businesses page controls displaying as raw/unformatted HTML
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run:
+   supabase/migrations/202608060015_business_inventory_timestamps.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "fix: sync business inventory schema and styling"
+   git push origin main
+
+OPTIONAL CHECK
+Run:
+   supabase/checks/202608060016_verify_business_inventory.sql
+
+WHAT THIS PATCHES
+- Adds created_at and updated_at to business_inventory.
+- Backfills existing purchased stock.
+- Restores complete styling for Register Business, tabs, banking,
+  transactions, employees, payroll, inventory, categories, and storefront.
+- Keeps the explicit product relationship used by the inventory query.
+- Displays purchased business stock and Add to Store controls.
