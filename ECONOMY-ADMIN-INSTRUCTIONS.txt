@@ -1,0 +1,43 @@
+ULTIMATECAD — ECONOMY ADMINISTRATION + GTA/RP STORE CATALOGUE
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run:
+   supabase/migrations/202608060010_economy_admin_and_catalog.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "feat: add economy administration and RP store catalogue"
+   git push origin main
+
+WHAT THIS ADDS
+
+Starting money
+- Economy starting balance is now $25,000.
+- A character's first checking account receives $25,000.
+- Existing untouched zero-balance checking accounts are updated to $25,000.
+
+Store catalogue
+- Seeds four community stores.
+- Adds more than 140 GTA/RP items.
+- Food, drinks, electronics, clothing, tools, medical supplies, mechanic parts,
+  documents, public-safety props, camping, fishing, and general RP items.
+- Existing store products are updated safely by SKU.
+
+Banking administration
+- New /banking/admin route.
+- Search and monitor all personal, business, government, and system accounts.
+- Add money.
+- Remove money.
+- Freeze and unfreeze.
+- Restrict and close.
+- Place account holds.
+- Release held funds.
+- Seize held funds into the government treasury.
+- Full transaction monitoring and administrator notes.

@@ -1,0 +1,36 @@
+ULTIMATECAD — ECONOMY ADMIN CATALOGUE SQL FIX
+
+CAUSE
+The previous migration used a temporary table named economy_catalog_seed.
+The SQL editor did not keep that temporary relation available for the later
+catalogue insert.
+
+FIX
+The corrected migration now seeds every product directly from a VALUES table.
+No temporary table is used.
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run the corrected main migration:
+   supabase/migrations/202608060010_economy_admin_and_catalog.sql
+
+Because the original migration used BEGIN/COMMIT, the failed execution should
+have rolled back. Rerunning the corrected full migration is normally all that
+is required.
+
+3. Only when the economy administration SQL already succeeded and the products
+alone are missing, run:
+   supabase/hotfixes/202608060011_catalogue_seed_without_temp_table.sql
+
+4. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+5. Push:
+   git add .
+   git commit -m "fix: seed RP catalogue without temporary table"
+   git push origin main

@@ -1,1 +1,4 @@
+Add this to the end of src/app/banking/banking.module.css if the ZIP merge does not
+already preserve it:
+
 .adminLink{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 15px;border:1px solid #2f765a;border-radius:10px;background:#0d2c22;color:#8ce5b8;font-weight:800;text-decoration:none}
