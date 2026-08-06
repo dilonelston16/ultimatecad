@@ -5,14 +5,9 @@ import BusinessesClient from "./businesses-client";
 
 export default async function BusinessesPage() {
   const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login?next=/businesses");
-  }
+  if (!user) redirect("/login?next=/businesses");
 
   const { data: membership } = await supabase
     .from("community_memberships")
@@ -23,15 +18,11 @@ export default async function BusinessesPage() {
     .limit(1)
     .maybeSingle();
 
-  if (!membership) {
-    redirect("/onboarding");
-  }
+  if (!membership) redirect("/onboarding");
 
   const { data: active } = await supabase
     .from("active_characters")
-    .select(
-      "character_id,character:characters(id,first_name,last_name,state_id)"
-    )
+    .select("character_id,character:characters(id,first_name,last_name,state_id)")
     .eq("community_id", membership.community_id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -41,115 +32,94 @@ export default async function BusinessesPage() {
     ? rawCharacter[0]
     : rawCharacter;
 
-  if (!character) {
-    redirect("/civilian");
-  }
+  if (!character) redirect("/civilian");
 
-  // Load ownerships separately. This avoids PostgREST failures caused by
-  // filtering through an embedded business_members relationship.
-  const { data: ownedBusinesses, error: ownedError } = await supabase
+  const { data: owned } = await supabase
     .from("businesses")
     .select("*")
     .eq("community_id", membership.community_id)
     .eq("owner_character_id", character.id)
     .order("created_at", { ascending: false });
 
-  const { data: memberships, error: membershipError } = await supabase
+  const { data: memberRows } = await supabase
     .from("business_members")
     .select("business_id")
     .eq("community_id", membership.community_id)
     .eq("character_id", character.id)
     .eq("status", "active");
 
-  const memberBusinessIds = (memberships ?? []).map(
-    (item) => item.business_id
+  const memberIds = (memberRows ?? []).map((row) => row.business_id);
+  const { data: employed } = memberIds.length
+    ? await supabase
+        .from("businesses")
+        .select("*")
+        .in("id", memberIds)
+    : { data: [] };
+
+  const map = new Map<string, any>();
+  [...(owned ?? []), ...(employed ?? [])].forEach((business) =>
+    map.set(business.id, business)
   );
 
-  const { data: memberBusinesses, error: memberBusinessError } =
-    memberBusinessIds.length > 0
-      ? await supabase
-          .from("businesses")
-          .select("*")
-          .eq("community_id", membership.community_id)
-          .in("id", memberBusinessIds)
-          .order("created_at", { ascending: false })
-      : { data: [], error: null };
-
-  const businessMap = new Map<string, any>();
-
-  for (const business of [
-    ...(ownedBusinesses ?? []),
-    ...(memberBusinesses ?? []),
-  ]) {
-    businessMap.set(business.id, business);
-  }
-
-  const businesses = Array.from(businessMap.values());
-  const businessIds = businesses.map((business) => business.id);
+  const businesses = Array.from(map.values());
+  const ids = businesses.map((business) => business.id);
   const accountIds = businesses
     .map((business) => business.business_bank_account_id)
     .filter(Boolean);
 
-  const [{ data: accounts }, { data: members }, { data: stores }] =
+  const [{ data: accounts }, { data: members }, { data: transactions }, { data: payroll }] =
     await Promise.all([
       accountIds.length
-        ? supabase
-            .from("bank_accounts")
-            .select(
-              "id,account_number,name,balance,available_balance,status"
-            )
-            .in("id", accountIds)
+        ? supabase.from("bank_accounts").select("*").in("id", accountIds)
         : Promise.resolve({ data: [] }),
-      businessIds.length
+      ids.length
         ? supabase
             .from("business_members")
-            .select(
-              "id,business_id,character_id,role_name,pay_type,pay_rate,status,character:characters(id,first_name,last_name,state_id)"
-            )
-            .in("business_id", businessIds)
-            .order("hired_at")
+            .select("*,character:characters(id,first_name,last_name,state_id)")
+            .in("business_id", ids)
+            .order("role_level", { ascending: false })
         : Promise.resolve({ data: [] }),
-      businessIds.length
+      accountIds.length
         ? supabase
-            .from("stores")
-            .select("id,business_id,name,description,status")
-            .in("business_id", businessIds)
-            .order("created_at")
+            .from("bank_transactions")
+            .select("*")
+            .in("account_id", accountIds)
+            .order("created_at", { ascending: false })
+            .limit(100)
+        : Promise.resolve({ data: [] }),
+      ids.length
+        ? supabase
+            .from("payroll_runs")
+            .select("*")
+            .in("business_id", ids)
+            .order("created_at", { ascending: false })
         : Promise.resolve({ data: [] }),
     ]);
 
-  const accountsById = new Map(
-    (accounts ?? []).map((account: any) => [account.id, account])
-  );
-
-  const hydratedBusinesses = businesses.map((business) => ({
+  const hydrated = businesses.map((business) => ({
     ...business,
     bank_account:
-      accountsById.get(business.business_bank_account_id) ?? null,
+      (accounts ?? []).find(
+        (account: any) => account.id === business.business_bank_account_id
+      ) ?? null,
     members: (members ?? []).filter(
       (member: any) => member.business_id === business.id
     ),
-    stores: (stores ?? []).filter(
-      (store: any) => store.business_id === business.id
+    transactions: (transactions ?? []).filter(
+      (transaction: any) =>
+        transaction.account_id === business.business_bank_account_id
+    ),
+    payrollRuns: (payroll ?? []).filter(
+      (run: any) => run.business_id === business.id
     ),
   }));
-
-  const pageError =
-    ownedError?.message ??
-    membershipError?.message ??
-    memberBusinessError?.message ??
-    "";
 
   return (
     <AppShell
       title="Businesses"
       subtitle={`${character.first_name} ${character.last_name} · ${character.state_id}`}
     >
-      <BusinessesClient
-        character={character}
-        businesses={hydratedBusinesses}
-        loadError={pageError}
-      />
+      <BusinessesClient character={character} businesses={hydrated} />
     </AppShell>
   );
 }

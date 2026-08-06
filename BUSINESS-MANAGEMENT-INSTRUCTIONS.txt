@@ -1,0 +1,43 @@
+ULTIMATECAD — BUSINESS MANAGEMENT COMPLETION
+
+This update removes duplicate business creation from Economy and completes the
+business operations page.
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run in Supabase SQL Editor:
+   supabase/migrations/202608060009_complete_business_management.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "feat: complete business banking and employee management"
+   git push origin main
+
+WHAT CHANGED
+
+Economy:
+- Removed the duplicate Register Business form.
+- Added one Manage Businesses link.
+- Economy remains the financial overview and loan area.
+
+Businesses:
+- Overview, Banking, Employees, and Payroll tabs.
+- Business bank balance and account number.
+- Business-to-account transfers.
+- Business transaction history.
+- Hire by State ID.
+- Fire and rehire.
+- Promote and demote.
+- Change role and pay during promotion/demotion.
+- One-time employee payments.
+- Payroll draft creation and processing.
+- Employee checking-account validation.
+- Immutable business transaction ledger.
