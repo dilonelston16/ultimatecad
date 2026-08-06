@@ -1,0 +1,22 @@
+ULTIMATECAD MILESTONE 1.7 — REAL LICENCE EXAMS
+
+1. Extract into C:\Projects\ultimatecad
+2. Run only:
+   supabase/migrations/202608060001_real_license_exams.sql
+3. Build:
+   rmdir /s /q .next
+   pnpm build
+4. Push:
+   git add .
+   git commit -m "feat: add realistic licence examinations"
+   git push origin main
+
+Adds:
+- 25 Class C questions
+- 20 Motorcycle questions
+- 20 Commercial questions
+- 20 Weapon questions
+- Randomized exam sets
+- 20-minute timer
+- Maximum 5 written attempts
+- Styled exam interface

@@ -1,9 +1,10 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import styles from "./written-test.module.css";
 
 type Question = {
   id: string;
@@ -12,7 +13,6 @@ type Question = {
   option_b: string;
   option_c: string;
   option_d: string;
-  sort_order: number;
 };
 
 type Props = {
@@ -22,6 +22,7 @@ type Props = {
   characterName: string;
   stateId: string;
   loadError?: string;
+  timeLimitMinutes?: number;
 };
 
 export default function WrittenTestClient({
@@ -31,26 +32,46 @@ export default function WrittenTestClient({
   characterName,
   stateId,
   loadError = "",
+  timeLimitMinutes = 20,
 }: Props) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string,string>>({});
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ score: number; passed: boolean } | null>(
-    alreadyPassed ? { score: 100, passed: true } : null
-  );
   const [error, setError] = useState(loadError);
+  const [secondsLeft, setSecondsLeft] = useState(timeLimitMinutes * 60);
+  const [result, setResult] = useState<{score:number;passed:boolean}|null>(
+    alreadyPassed ? { score:100, passed:true } : null
+  );
 
   const answered = useMemo(
-    () => questions.filter((question) => answers[question.id]).length,
+    () => questions.filter(q => answers[q.id]).length,
     [answers, questions]
   );
 
+  useEffect(() => {
+    if (result || !questions.length) return;
+    const timer = window.setInterval(() => {
+      setSecondsLeft(value => Math.max(0, value - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [result, questions.length]);
+
+  useEffect(() => {
+    if (secondsLeft === 0 && !result && questions.length) {
+      void submit();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft]);
+
   const current = questions[index];
+  const minutes = Math.floor(secondsLeft / 60).toString().padStart(2,"0");
+  const seconds = (secondsLeft % 60).toString().padStart(2,"0");
 
   async function submit() {
-    if (answered !== questions.length) {
-      setError("Answer every question before submitting the test.");
+    if (busy) return;
+    if (answered !== questions.length && secondsLeft > 0) {
+      setError("Answer every question before submitting.");
       return;
     }
 
@@ -59,30 +80,17 @@ export default function WrittenTestClient({
 
     try {
       const response = await fetch("/api/licenses/tests/written", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ applicationId, answers }),
+        method:"POST",
+        headers:{ "content-type":"application/json" },
+        body:JSON.stringify({ applicationId, answers }),
       });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Test submission failed.");
 
-      const text = await response.text();
-      let body: any = {};
-      try { body = text ? JSON.parse(text) : {}; } catch {}
-
-      if (!response.ok) {
-        throw new Error(body.error || `The written test could not be submitted (${response.status}).`);
-      }
-
-      setResult({
-        score: Number(body.score ?? 0),
-        passed: Boolean(body.passed),
-      });
+      setResult({ score:Number(body.score || 0), passed:Boolean(body.passed) });
       router.refresh();
-    } catch (submissionError) {
-      setError(
-        submissionError instanceof Error
-          ? submissionError.message
-          : "The written test could not be submitted."
-      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Test submission failed.");
     } finally {
       setBusy(false);
     }
@@ -90,88 +98,67 @@ export default function WrittenTestClient({
 
   if (!questions.length || !current) {
     return (
-      <section className="written-test-empty">
-        <AlertTriangle />
-        <h2>Written test unavailable</h2>
-        <p>{loadError || "No questions are configured for this license type."}</p>
-        <Link href="/licenses" className="button">Return to licenses</Link>
+      <section className={styles.result}>
+        <AlertTriangle size={48} />
+        <h2>Exam unavailable</h2>
+        <p>{loadError || "No questions are configured for this licence type."}</p>
+        <Link href="/licenses" className={styles.button}>Return to licences</Link>
       </section>
     );
   }
 
   if (result) {
     return (
-      <section className={`written-test-result ${result.passed ? "passed" : "failed"}`}>
-        {result.passed ? <CheckCircle2 /> : <AlertTriangle />}
-        <span className="eyebrow">{result.passed ? "TEST PASSED" : "TEST FAILED"}</span>
+      <section className={styles.result}>
+        {result.passed ? <CheckCircle2 size={52}/> : <AlertTriangle size={52}/>}
+        <span className={styles.eyebrow}>{result.passed ? "Exam passed" : "Exam failed"}</span>
         <h2>{result.score.toFixed(0)}%</h2>
         <p>
           {result.passed
             ? "Your written requirement is complete."
-            : "A passing score is 80%. Review the material and retake the test."}
+            : "A passing score is 80%. Review the material and apply for a retake."}
         </p>
-        <div className="written-result-actions">
-          {!result.passed && (
-            <button
-              className="button"
-              onClick={() => {
-                setAnswers({});
-                setIndex(0);
-                setResult(null);
-                setError("");
-              }}
-            >
-              Retake test
-            </button>
-          )}
-          <Link href="/licenses" className="button ghost">Return to licenses</Link>
-        </div>
+        <Link href="/licenses" className={styles.button}>Return to licences</Link>
       </section>
     );
   }
 
   const options = [
-    ["A", current.option_a],
-    ["B", current.option_b],
-    ["C", current.option_c],
-    ["D", current.option_d],
+    ["A",current.option_a],["B",current.option_b],["C",current.option_c],["D",current.option_d],
   ];
 
   return (
-    <div className="written-test-page">
-      <section className="written-test-header">
+    <div className={styles.page}>
+      <section className={styles.hero}>
         <div>
-          <span className="eyebrow">Official written exam</span>
+          <span className={styles.eyebrow}>Official written examination</span>
           <h2>{characterName}</h2>
-          <p>{stateId}</p>
+          <p>{stateId} · {answered}/{questions.length} answered</p>
         </div>
-        <div className="written-progress-copy">
-          <strong>{answered}/{questions.length}</strong>
-          <span>answered</span>
+        <div className={styles.timer}>
+          <Clock3 size={18}/>
+          <strong>{minutes}:{seconds}</strong>
+          <span>time remaining</span>
         </div>
       </section>
 
-      <div className="written-progress-track">
-        <span style={{ width: `${(answered / questions.length) * 100}%` }} />
+      <div className={styles.progressTrack}>
+        <span style={{ width:`${(answered/questions.length)*100}%` }}/>
       </div>
 
-      <section className="panel written-question-card">
-        <span className="question-number">
-          Question {index + 1} of {questions.length}
-        </span>
-        <h2>{current.question}</h2>
+      <section className={styles.card}>
+        <span className={styles.questionNumber}>Question {index+1} of {questions.length}</span>
+        <h3>{current.question}</h3>
 
-        <div className="written-options">
-          {options.map(([letter, label]) => (
+        <div className={styles.options}>
+          {options.map(([letter,label]) => (
             <button
-              type="button"
               key={letter}
-              className={answers[current.id] === letter ? "selected" : ""}
-              onClick={() =>
-                setAnswers((previous) => ({ ...previous, [current.id]: letter }))
-              }
+              type="button"
+              className={`${styles.option} ${answers[current.id]===letter ? styles.optionSelected : ""}`}
+              onClick={() => setAnswers(prev => ({...prev,[current.id]:letter}))}
             >
-              <b>{letter}</b>
+              <span className={styles.letter}>{letter}</span>
               <span>{label}</span>
             </button>
           ))}
@@ -179,27 +166,23 @@ export default function WrittenTestClient({
 
         {error && <div className="auth-error">{error}</div>}
 
-        <div className="written-test-nav">
+        <div className={styles.footer}>
           <button
             type="button"
-            className="button ghost"
-            disabled={index === 0}
-            onClick={() => setIndex((value) => value - 1)}
+            className={`${styles.button} ${styles.secondary}`}
+            disabled={index===0}
+            onClick={() => setIndex(v => v-1)}
           >
-            <ChevronLeft size={17} /> Previous
+            <ChevronLeft size={17}/> Previous
           </button>
 
-          {index < questions.length - 1 ? (
-            <button
-              type="button"
-              className="button"
-              onClick={() => setIndex((value) => value + 1)}
-            >
-              Next <ChevronRight size={17} />
+          {index < questions.length-1 ? (
+            <button type="button" className={styles.button} onClick={() => setIndex(v => v+1)}>
+              Next <ChevronRight size={17}/>
             </button>
           ) : (
-            <button type="button" className="button" disabled={busy} onClick={submit}>
-              {busy ? "Scoring…" : "Submit test"}
+            <button type="button" className={styles.button} disabled={busy} onClick={submit}>
+              {busy ? "Scoring…" : "Submit exam"}
             </button>
           )}
         </div>
