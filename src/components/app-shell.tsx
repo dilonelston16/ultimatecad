@@ -49,7 +49,7 @@ type NavItem = {
 const sharedItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Civilian", href: "/civilian", icon: CircleUserRound },
-  { label: "Banking", href: "/banking", icon: Landmark, comingSoon: true },
+  { label: "Banking", href: "/banking", icon: Landmark },
   { label: "Economy", href: "/economy", icon: BadgeDollarSign, comingSoon: true },
   { label: "Businesses", href: "/businesses", icon: BriefcaseBusiness, comingSoon: true },
   { label: "Stores", href: "/stores", icon: Store, comingSoon: true },
