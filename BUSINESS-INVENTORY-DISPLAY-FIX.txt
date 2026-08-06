@@ -1,0 +1,43 @@
+ULTIMATECAD — BUSINESS INVENTORY DISPLAY FIX
+
+CAUSE
+
+The business purchase was successfully debited and the business_inventory row
+was created. However, the Businesses page used this ambiguous relationship:
+
+  product:store_products(...)
+
+There are now two relationships between business_inventory and store_products:
+- business_inventory.product_id -> store_products.id
+- store_products.source_inventory_id -> business_inventory.id
+
+PostgREST could not decide which relationship to use, so the inventory query
+failed and the page treated the result as an empty array.
+
+FIX
+
+The page now explicitly uses:
+
+  product:store_products!business_inventory_product_id_fkey(...)
+
+It also displays query errors instead of silently showing an empty inventory.
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. No migration is required.
+
+3. Optional verification SQL:
+   supabase/checks/202608060015_verify_business_inventory.sql
+
+4. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+5. Push:
+   git add .
+   git commit -m "fix: display purchased business inventory"
+   git push origin main
