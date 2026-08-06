@@ -1,0 +1,32 @@
+ULTIMATECAD — BUSINESS, STORE, AND INVENTORY COMPLETION
+
+Built directly against uwncad(5).zip.
+
+1. Extract into C:\Projects\ultimatecad and replace included files.
+2. Run in Supabase SQL Editor:
+   supabase/migrations/202608060013_business_store_inventory_completion.sql
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+4. Push:
+   git add .
+   git commit -m "feat: complete business stores and inventory"
+   git push origin main
+
+WHAT THIS PATCHES
+- Inventory & Assets added to sidebar.
+- Business creation restored.
+- New businesses automatically receive bank account, storefront, inventory, and categories.
+- Existing businesses are repaired with storefronts/categories.
+- Stores support Personal or Business purchase destination.
+- Business purchases debit business account and enter separate business inventory.
+- Owners can publish business inventory into their store and set category/price.
+- Owners can add custom store categories.
+- Business store sales continue routing into the business account.
+- Expanded clothing, business supply, construction, farming, fishing, camping,
+  automotive, electronics, and fictional RP contraband catalogue.
+
+NOTE
+The contraband entries are fictional roleplay records only and contain no real-world
+manufacturing or use instructions.
