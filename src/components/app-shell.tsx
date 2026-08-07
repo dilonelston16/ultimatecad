@@ -64,7 +64,7 @@ const sharedItems: NavItem[] = [
 ];
 
 const departmentItems: NavItem[] = [
-  { label: "LEO Dashboard", href: "/agencies/law-enforcement", icon: Shield },
+  { label: "LEO / MDT", href: "/leo", icon: Shield },
   { label: "Reports", href: "/agencies/law-enforcement/reports", icon: Gavel, comingSoon: true },
   { label: "Penal Codes", href: "/agencies/law-enforcement/penal-codes", icon: Scale, comingSoon: true },
   { label: "DMV Administration", href: "/dmv", icon: BadgeCheck },

@@ -1,0 +1,54 @@
+ULTIMATECAD MILESTONE 3.0 — LEO / MDT FOUNDATION
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run in Supabase SQL Editor:
+   supabase/migrations/202608060018_leo_mdt_foundation.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "feat: add LEO MDT foundation"
+   git push origin main
+
+ROUTES
+
+/leo
+Main working LEO / MDT dashboard.
+
+/agencies/law-enforcement
+Redirects to /leo.
+
+WHAT THIS ADDS
+
+- LEO clock in and clock out
+- Callsign, badge, rank, console, agency, department, division, subdivision
+- Unit status changes
+- Active connected-unit board
+- Create active calls
+- Priority levels
+- Supervisor self-dispatch
+- Panic alerts
+- Active BOLO display foundation
+- Global MDT search for characters, vehicles, weapons, properties, businesses
+- Responsive desktop and mobile interface
+- Real permission keys and RLS
+- Sidebar activation
+
+PHASE 2 REMAINS
+
+- Full reports
+- Citations and penal-code attachments
+- Warrants
+- BOLO creation/editing
+- Dispatch call lifecycle
+- Tow and impound
+- Jail booking
+- Supervisor assignment controls
