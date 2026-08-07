@@ -1,0 +1,29 @@
+ULTIMATECAD — REMOVE DUPLICATE BOTTOM PANIC BUTTON
+
+This patch removes the duplicate panic trigger from the lower-right dashboard
+panel.
+
+The single active panic trigger remains in the top command bar.
+
+The lower-right panel now displays:
+- Current panic status
+- Active panic count
+- Clear / emergency state
+- Instructions pointing officers to the top PANIC button
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. No SQL migration is required.
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "fix: remove duplicate LEO panic button"
+   git push origin main

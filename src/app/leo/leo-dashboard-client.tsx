@@ -832,17 +832,9 @@ export default function LeoDashboardClient({
         </div>
 
         <aside className={styles.panicCard}>
-          <header>Officer Panic System</header>
-          <button onClick={panic}>
-            <Siren />
-            <div>
-              <b>Panic Button</b>
-              <span>Activate emergency alert</span>
-            </div>
-          </button>
+          <header>Officer Panic Status</header>
           <p>
-            Alerts all connected units with audio and a visual
-            notification.
+            Panic alerts are activated from the red PANIC button in the top command bar.
           </p>
 
           <div className={styles.panicStatus}>
