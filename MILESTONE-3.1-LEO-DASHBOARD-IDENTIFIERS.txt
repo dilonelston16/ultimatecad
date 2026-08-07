@@ -1,0 +1,53 @@
+ULTIMATECAD MILESTONE 3.1
+COMMERCIAL LEO DASHBOARD + SAVED IDENTIFIERS
+
+INSTALL
+
+1. Extract into:
+   C:\Projects\ultimatecad
+
+2. Run:
+   supabase/migrations/202608060019_leo_multi_identifiers_dashboard.sql
+
+3. Build:
+   cd C:\Projects\ultimatecad
+   rmdir /s /q .next
+   pnpm build
+
+4. Push:
+   git add .
+   git commit -m "feat: redesign LEO dashboard and add saved identifiers"
+   git push origin main
+
+WHAT THIS PATCHES
+
+LEO DESIGN
+- Replaces the first LEO dashboard layout with the commercial MDT layout.
+- Adds top command bar, global search, panic, alerts, identity display.
+- Adds six operational metric cards.
+- Adds active calls, unit status, BOLO, warrants, reports, citations,
+  arrests, panic-status, quick-actions, and shift panels.
+- Preserves working calls, units, self-dispatch, panic, search, and shift data.
+
+MULTIPLE SAVED IDENTIFIERS
+- Save more than one identifier per account.
+- Each identifier stores department, agency, division, subdivision, rank,
+  callsign, badge, console, certifications, and default status.
+- Select an identifier from the top-right officer menu.
+- Selected identifier remains saved after logout.
+- Create, edit, archive, restore, and set a default.
+- Duplicate callsigns and badge numbers are blocked per department.
+- Active shifts prevent unsafe identity switching.
+- Clock-in uses the currently selected saved identifier.
+
+UNCHANGED MODULES
+- Civilian
+- Economy
+- Banking
+- Businesses
+- Stores
+- Inventory
+- Marketplace
+- DMV
+- Authentication
+- Existing records

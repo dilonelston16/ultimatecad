@@ -50,8 +50,15 @@ export default async function LeoPage() {
 
   if (!canView) redirect("/dashboard?error=leo_access_required");
 
+  const { data: preference } = await supabase
+    .from("leo_user_preferences")
+    .select("selected_identifier_id,sound_enabled")
+    .eq("community_id", membership.community_id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
   const [
-    profileResult,
+    identifiersResult,
     shiftResult,
     unitResult,
     callResult,
@@ -66,7 +73,8 @@ export default async function LeoPage() {
       .select("*")
       .eq("community_id", membership.community_id)
       .eq("user_id", user.id)
-      .maybeSingle(),
+      .order("is_default", { ascending: false })
+      .order("last_used_at", { ascending: false, nullsFirst: false }),
     supabase
       .from("leo_shifts")
       .select("*")
@@ -77,7 +85,7 @@ export default async function LeoPage() {
     supabase
       .from("leo_shifts")
       .select(
-        "id,status,current_assignment,clocked_in_at,last_status_at,unit:leo_unit_profiles(id,callsign,badge_number,rank_name,console_platform,supervisor,user:profiles(display_name,username,avatar_url))"
+        "id,status,current_assignment,clocked_in_at,last_status_at,identifier_id,unit:leo_unit_profiles(id,identifier_name,callsign,badge_number,rank_name,console_platform,supervisor,department_node_id,user:profiles(display_name,username,avatar_url))"
       )
       .eq("community_id", membership.community_id)
       .is("clocked_out_at", null)
@@ -97,7 +105,7 @@ export default async function LeoPage() {
     supabase
       .from("leo_panic_alerts")
       .select(
-        "id,shift_id,location,message,status,activated_at,unit:leo_shifts(unit:leo_unit_profiles(callsign,user:profiles(display_name,username)))"
+        "id,shift_id,location,message,status,activated_at,unit:leo_shifts(unit:leo_unit_profiles(identifier_name,callsign,user:profiles(display_name,username)))"
       )
       .eq("community_id", membership.community_id)
       .eq("status", "active")
@@ -108,7 +116,7 @@ export default async function LeoPage() {
       .eq("community_id", membership.community_id)
       .eq("status", "active")
       .order("created_at", { ascending: false })
-      .limit(8),
+      .limit(12),
     supabase
       .from("organization_nodes")
       .select("id,parent_id,node_type,name,sort_order")
@@ -121,8 +129,21 @@ export default async function LeoPage() {
       .maybeSingle(),
   ]);
 
+  const identifiers = identifiersResult.data ?? [];
+  const activeIdentifiers = identifiers.filter(
+    (identifier) => !identifier.is_archived
+  );
+
+  const selectedIdentifier =
+    activeIdentifiers.find(
+      (identifier) => identifier.id === preference?.selected_identifier_id
+    ) ??
+    activeIdentifiers.find((identifier) => identifier.is_default) ??
+    activeIdentifiers[0] ??
+    null;
+
   const errors = [
-    profileResult.error?.message,
+    identifiersResult.error?.message,
     shiftResult.error?.message,
     unitResult.error?.message,
     callResult.error?.message,
@@ -135,12 +156,13 @@ export default async function LeoPage() {
   return (
     <AppShell
       title="LEO / MDT"
-      subtitle="Live law-enforcement operations, units, calls, panic alerts, and records search."
+      subtitle="Law-enforcement operations workspace"
     >
       <LeoDashboardClient
         communityId={membership.community_id}
         userProfile={userProfileResult.data}
-        unitProfile={profileResult.data}
+        identifiers={identifiers}
+        selectedIdentifier={selectedIdentifier}
         activeShift={shiftResult.data}
         units={unitResult.data ?? []}
         calls={callResult.data ?? []}
@@ -150,6 +172,7 @@ export default async function LeoPage() {
         organization={organizationResult.data ?? []}
         canSelfDispatch={canSelfDispatch}
         canManageCalls={canManageCalls}
+        soundEnabled={preference?.sound_enabled !== false}
         loadError={errors.join(" | ")}
       />
     </AppShell>
