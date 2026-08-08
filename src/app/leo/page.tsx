@@ -134,7 +134,7 @@ export default async function LeoPage() {
       .select("display_name,username,avatar_url")
       .eq("id", user.id)
       .maybeSingle(),
-    supabase.from("leo_records").select("*,character:characters(first_name,last_name,state_id),vehicle:vehicles(plate_number,make,model),charges:leo_record_charges(*)").eq("community_id", membership.community_id).order("created_at", { ascending: false }).limit(30),
+    supabase.from("leo_records").select("*,character:characters(first_name,last_name,state_id),vehicle:vehicles(plate_number,make,model),officer:leo_unit_profiles(identifier_name,callsign,badge_number,rank_name),charges:leo_record_charges(*)").eq("community_id", membership.community_id).order("created_at", { ascending: false }).limit(30),
     supabase.from("leo_warrants").select("*,character:characters(first_name,last_name,state_id)").eq("community_id", membership.community_id).eq("status","active").order("issued_at", { ascending: false }).limit(20),
     supabase.from("penal_codes").select("*").eq("community_id", membership.community_id).eq("active",true).order("category").order("code").limit(250),
     supabase.from("leo_traffic_stops").select("*").eq("community_id", membership.community_id).eq("status","active").order("started_at", { ascending: false }),

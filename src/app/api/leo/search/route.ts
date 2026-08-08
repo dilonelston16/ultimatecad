@@ -42,6 +42,8 @@ export async function GET(request: Request) {
     weapons,
     properties,
     businesses,
+    records,
+    warrants,
   ] = await Promise.all([
     supabase
       .from("characters")
@@ -72,6 +74,18 @@ export async function GET(request: Request) {
       .select("id,business_number,name,business_type,status")
       .eq("community_id", communityId)
       .or(`business_number.ilike.${like},name.ilike.${like}`)
+      .limit(8),
+    supabase
+      .from("leo_records")
+      .select("id,record_number,record_type,title,status,created_at")
+      .eq("community_id", communityId)
+      .or(`record_number.ilike.${like},title.ilike.${like}`)
+      .limit(8),
+    supabase
+      .from("leo_warrants")
+      .select("id,warrant_number,title,status,priority,issued_at")
+      .eq("community_id", communityId)
+      .or(`warrant_number.ilike.${like},title.ilike.${like}`)
       .limit(8),
   ]);
 
@@ -105,6 +119,18 @@ export async function GET(request: Request) {
       id: item.id,
       title: item.name,
       subtitle: `${item.business_number} · ${item.business_type} · ${item.status}`,
+    })),
+    ...(records.data ?? []).map((item) => ({
+      type: "record",
+      id: item.id,
+      title: `${item.record_number} — ${item.title}`,
+      subtitle: `${item.record_type} · ${item.status} · ${new Date(item.created_at).toLocaleDateString()}`,
+    })),
+    ...(warrants.data ?? []).map((item) => ({
+      type: "warrant",
+      id: item.id,
+      title: `${item.warrant_number} — ${item.title}`,
+      subtitle: `${item.priority} · ${item.status} · ${new Date(item.issued_at).toLocaleDateString()}`,
     })),
   ];
 

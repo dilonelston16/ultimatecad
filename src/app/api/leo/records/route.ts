@@ -8,6 +8,17 @@ async function access(supabase:any,userId:string,communityId:string,permission="
   ]);
   return allowed === true || membership?.is_owner === true;
 }
+
+export async function GET(request:Request){
+ const supabase=await createServerSupabaseClient(); const {data:{user}}=await supabase.auth.getUser();
+ if(!user) return NextResponse.json({error:"Authentication required."},{status:401});
+ const url=new URL(request.url), communityId=String(url.searchParams.get("communityId")||""), recordId=String(url.searchParams.get("id")||"");
+ if(!communityId || !recordId || !(await access(supabase,user.id,communityId,"leo.view_records"))) return NextResponse.json({error:"LEO record access required."},{status:403});
+ const {data,error}=await supabase.from("leo_records").select("*,character:characters(first_name,last_name,state_id),vehicle:vehicles(plate_number,make,model,vin),officer:leo_unit_profiles(identifier_name,callsign,badge_number,rank_name),charges:leo_record_charges(*)").eq("community_id",communityId).eq("id",recordId).maybeSingle();
+ if(error) return NextResponse.json({error:error.message},{status:400});
+ if(!data) return NextResponse.json({error:"Record not found."},{status:404});
+ return NextResponse.json({record:data});
+}
 export async function POST(request:Request){
  const supabase=await createServerSupabaseClient(); const {data:{user}}=await supabase.auth.getUser();
  if(!user) return NextResponse.json({error:"Authentication required."},{status:401});

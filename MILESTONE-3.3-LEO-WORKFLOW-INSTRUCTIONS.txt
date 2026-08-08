@@ -1,0 +1,15 @@
+UltimateCAD Milestone 3.3 — LEO Workflow + Panic/Record Viewer
+
+REQUIRED SQL
+Run in Supabase SQL Editor before deployment:
+  supabase/migrations/202608080002_leo_milestone_3_3_workflows.sql
+
+PATCH HIGHLIGHTS
+- Active officer panic board with unit, officer, location, activation time, and clear action.
+- Top bell and red active-panic strip open the panic board.
+- Recent reports, citations, and arrests are clickable and reopen in a complete record viewer.
+- Record viewer shows subject, location, narrative, charges, fine, jail, points, bond, status, and timestamps.
+- Global MDT search now includes record numbers/titles and warrants.
+- Backup request, traffic stop, and tow request actions create real database-backed operations.
+- Active Operations dashboard panel shows live backup, traffic, and tow work.
+- Existing Civilian, Economy, Banking, Business, Store, Inventory, Marketplace, DMV, auth, and officer identifiers remain untouched.

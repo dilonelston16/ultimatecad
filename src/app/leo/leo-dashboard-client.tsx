@@ -54,7 +54,9 @@ const quickActions = [
   ["Self Dispatch", Radio, "self"],
   ["BOLO Board", ShieldAlert, "bolo"],
   ["Warrant Check", Gavel, "search"],
-  ["Request Backup", Siren, "panic"],
+  ["Request Backup", Siren, "backup"],
+  ["Traffic Stop", Car, "traffic"],
+  ["Tow Request", MapPin, "tow"],
 ];
 
 export default function LeoDashboardClient({
@@ -89,6 +91,9 @@ export default function LeoDashboardClient({
   const [recordSubject, setRecordSubject] = useState<any>(null);
   const [selectedCharges, setSelectedCharges] = useState<any[]>([]);
   const [penalQuery, setPenalQuery] = useState("");
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [panicBoardOpen, setPanicBoardOpen] = useState(false);
+  const [operationFormOpen, setOperationFormOpen] = useState<"backup"|"traffic"|"tow"|"">("");
 
   const activeIdentifiers = identifiers.filter(
     (identifier: any) => !identifier.is_archived
@@ -310,6 +315,47 @@ export default function LeoDashboardClient({
     }
   }
 
+  async function resolvePanic(alertId: string) {
+    const ok = await api("/api/leo/panic", { action: "resolve", alertId });
+    if (ok) {
+      setMessage("Panic cleared and unit returned to available.");
+      if (panicAlerts.length <= 1) setPanicBoardOpen(false);
+    }
+  }
+
+  async function submitOperation(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!activeShift || !selected) {
+      setMessage("Clock in before starting an operational action.");
+      return;
+    }
+    const form = new FormData(event.currentTarget);
+    const location = String(form.get("location") || "");
+    const reason = String(form.get("reason") || "");
+    let payload:any = { communityId, location, reason, identifierId:selected.id, shiftId:activeShift.id };
+    if (operationFormOpen === "backup") payload = { ...payload, action:"request_backup", priority:form.get("priority") || "normal" };
+    if (operationFormOpen === "traffic") payload = { ...payload, action:"traffic_stop" };
+    if (operationFormOpen === "tow") payload = { ...payload, action:"tow_request", priority:form.get("priority") || "normal" };
+    const ok = await api("/api/leo/operations", payload);
+    if (ok) {
+      setMessage(operationFormOpen === "backup" ? "Backup request sent to active units." : operationFormOpen === "traffic" ? "Traffic stop started." : "Tow request created.");
+      setOperationFormOpen("");
+    }
+  }
+
+  function openRecord(record:any){
+    setSelectedRecord(record);
+  }
+
+  async function openRecordById(recordId:string){
+    setBusy("record");
+    const response=await fetch(`/api/leo/records?communityId=${encodeURIComponent(communityId)}&id=${encodeURIComponent(recordId)}`);
+    const body=await response.json();
+    setBusy("");
+    if(!response.ok){setMessage(body.error || "Unable to open record.");return;}
+    setSelectedRecord(body.record);
+  }
+
   async function createCall(
     event: React.FormEvent<HTMLFormElement>
   ) {
@@ -329,6 +375,11 @@ export default function LeoDashboardClient({
       setMessage("Call created.");
       setCallFormOpen(false);
     }
+  }
+
+  async function setCallStatus(callId:string,status:string){
+    const ok=await api("/api/leo/calls",{action:"set_status",callId,status});
+    if(ok) setMessage(status === "closed" ? "Call cleared and moved to history." : `Call marked ${status}.`);
   }
 
   async function selfDispatch(callId: string) {
@@ -374,7 +425,9 @@ export default function LeoDashboardClient({
 
   function handleQuickAction(action: string) {
     if (action === "search") setSearchOpen(true);
-    else if (action === "panic") void panic();
+    else if (action === "backup") { if (!activeShift) setMessage("Clock in before requesting backup."); else setOperationFormOpen("backup"); }
+    else if (action === "traffic") { if (!activeShift) setMessage("Clock in before starting a traffic stop."); else setOperationFormOpen("traffic"); }
+    else if (action === "tow") { if (!activeShift) setMessage("Clock in before requesting a tow."); else setOperationFormOpen("tow"); }
     else if (["report", "citation", "arrest"].includes(action)) { setRecordFormOpen(action); setSelectedCharges([]); setRecordSubject(null); }
     else if (action === "bolo") setMessage("BOLO management is available on the live BOLO board.");
     else if (action === "self") {
@@ -434,7 +487,7 @@ export default function LeoDashboardClient({
           <button className={styles.iconButton}>
             <MessageSquare />
           </button>
-          <button className={styles.iconButton}>
+          <button className={styles.iconButton} onClick={()=>setPanicBoardOpen(true)} title="Active panics">
             <Bell />
             {panicAlerts.length > 0 && (
               <span>{panicAlerts.length}</span>
@@ -567,7 +620,7 @@ export default function LeoDashboardClient({
       </header>
 
       {panicAlerts.length > 0 && (
-        <section className={styles.panicStrip}>
+        <section className={styles.panicStrip} onClick={()=>setPanicBoardOpen(true)} role="button" tabIndex={0}>
           <Siren />
           <strong>ACTIVE OFFICER PANIC</strong>
           <span>
@@ -669,13 +722,10 @@ export default function LeoDashboardClient({
                   )}{" "}
                   min
                 </small>
-                {canSelfDispatch && activeShift && (
-                  <button
-                    onClick={() => selfDispatch(call.id)}
-                  >
-                    Dispatch
-                  </button>
-                )}
+                <div className={styles.callActions}>
+                  {canSelfDispatch && activeShift && <button onClick={() => selfDispatch(call.id)}>Dispatch</button>}
+                  {canManageCalls && <button onClick={()=>setCallStatus(call.id,"closed")}>Clear</button>}
+                </div>
               </article>
             ))}
 
@@ -776,20 +826,30 @@ export default function LeoDashboardClient({
 
         <div className={`${styles.panel} ${styles.reportsPanel}`}>
           <header><h2>Recent Reports</h2><span>{records.filter((r:any)=>r.record_type==="report").length} loaded</span></header>
-          <div className={styles.placeholderRows}>{records.filter((r:any)=>r.record_type==="report").slice(0,5).map((r:any)=><article key={r.id}><span>{r.record_number}</span><b>{r.title}</b><small>{r.status}</small></article>)}{!records.some((r:any)=>r.record_type==="report")&&<div className={styles.emptyPanel}>No reports yet.</div>}</div>
+          <div className={styles.placeholderRows}>{records.filter((r:any)=>r.record_type==="report").slice(0,5).map((r:any)=><button type="button" className={styles.recordRow} key={r.id} onClick={()=>openRecord(r)}><span>{r.record_number}</span><b>{r.title}</b><small>{r.status}</small><ChevronRight/></button>)}{!records.some((r:any)=>r.record_type==="report")&&<div className={styles.emptyPanel}>No reports yet.</div>}</div>
         </div>
 
         <div className={`${styles.panel} ${styles.citationsPanel}`}>
           <header><h2>Recent Citations</h2><span>{records.filter((r:any)=>r.record_type==="citation").length} loaded</span></header>
-          <div className={styles.placeholderRows}>{records.filter((r:any)=>r.record_type==="citation").slice(0,5).map((r:any)=><article key={r.id}><span>{r.record_number}</span><b>{r.title}</b><small>${Number(r.total_fine||0).toFixed(0)}</small></article>)}{!records.some((r:any)=>r.record_type==="citation")&&<div className={styles.emptyPanel}>No citations yet.</div>}</div>
+          <div className={styles.placeholderRows}>{records.filter((r:any)=>r.record_type==="citation").slice(0,5).map((r:any)=><button type="button" className={styles.recordRow} key={r.id} onClick={()=>openRecord(r)}><span>{r.record_number}</span><b>{r.title}</b><small>${Number(r.total_fine||0).toFixed(0)}</small><ChevronRight/></button>)}{!records.some((r:any)=>r.record_type==="citation")&&<div className={styles.emptyPanel}>No citations yet.</div>}</div>
         </div>
 
         <div className={`${styles.panel} ${styles.arrestsPanel}`}>
           <header><h2>Recent Arrests</h2><span>{bookings.length} in custody</span></header>
-          <div className={styles.placeholderRows}>{records.filter((r:any)=>r.record_type==="arrest").slice(0,5).map((r:any)=><article key={r.id}><span>{r.record_number}</span><b>{r.title}</b><small>{r.total_jail_minutes||0} min</small></article>)}{!records.some((r:any)=>r.record_type==="arrest")&&<div className={styles.emptyPanel}>No arrests yet.</div>}</div>
+          <div className={styles.placeholderRows}>{records.filter((r:any)=>r.record_type==="arrest").slice(0,5).map((r:any)=><button type="button" className={styles.recordRow} key={r.id} onClick={()=>openRecord(r)}><span>{r.record_number}</span><b>{r.title}</b><small>{r.total_jail_minutes||0} min</small><ChevronRight/></button>)}{!records.some((r:any)=>r.record_type==="arrest")&&<div className={styles.emptyPanel}>No arrests yet.</div>}</div>
         </div>
 
-        <aside className={styles.panicCard}>
+        <div className={`${styles.panel} ${styles.operationsPanel}`}>
+          <header><h2>Active Operations</h2><span>{trafficStops.length + towRequests.length + backupRequests.length} live</span></header>
+          <div className={styles.operationRows}>
+            {backupRequests.slice(0,3).map((item:any)=><article key={item.id}><Siren/><div><b>Backup · {item.priority}</b><span>{item.location || "Location pending"}</span><small>{item.reason}</small></div></article>)}
+            {trafficStops.slice(0,3).map((item:any)=><article key={item.id}><Car/><div><b>{item.stop_number}</b><span>{item.location}</span><small>{item.reason}</small></div></article>)}
+            {towRequests.slice(0,3).map((item:any)=><article key={item.id}><MapPin/><div><b>{item.request_number}</b><span>{item.location}</span><small>{item.status} · {item.reason}</small></div></article>)}
+            {!trafficStops.length && !towRequests.length && !backupRequests.length && <div className={styles.emptyPanel}>No active traffic, tow, or backup operations.</div>}
+          </div>
+        </div>
+
+        <aside className={styles.panicCard} onClick={()=>panicAlerts.length && setPanicBoardOpen(true)}>
           <header>Officer Panic Status</header>
           <p>
             Panic alerts are activated from the red PANIC button in the top command bar.
@@ -1175,6 +1235,11 @@ export default function LeoDashboardClient({
                         setSearchOpen(false);
                         return;
                       }
+                      if (result.type === "record") {
+                        setSearchOpen(false);
+                        void openRecordById(result.id);
+                        return;
+                      }
                       setMessage(`${result.title} selected. Open a report, citation, or arrest to attach this record.`);
                       setSearchOpen(false);
                     }}
@@ -1197,6 +1262,53 @@ export default function LeoDashboardClient({
           </section>
         </div>
       )}
+      {operationFormOpen && (
+        <div className={`${styles.modalBackdrop} ${styles.priorityBackdrop}`}>
+          <form className={`${styles.modal} ${styles.operationModal}`} onSubmit={submitOperation}>
+            <header><div><span>FIELD OPERATIONS</span><h2>{operationFormOpen === "backup" ? "Request Backup" : operationFormOpen === "traffic" ? "Start Traffic Stop" : "Request Tow"}</h2></div><button type="button" onClick={()=>setOperationFormOpen("")}><X/></button></header>
+            <label>Location / Postal<input name="location" required placeholder="Enter current location or postal" /></label>
+            <label>{operationFormOpen === "traffic" ? "Reason for Stop" : operationFormOpen === "tow" ? "Tow / Impound Reason" : "Reason for Backup"}<textarea name="reason" required placeholder={operationFormOpen === "traffic" ? "Observed violation and reason for initiating the stop" : operationFormOpen === "tow" ? "Why the vehicle requires towing or impound" : "Why additional units are needed"} /></label>
+            {operationFormOpen !== "traffic" && <label>Priority<select name="priority" defaultValue="normal"><option value="normal">Normal</option><option value="urgent">Urgent</option>{operationFormOpen === "backup" && <option value="emergency">Emergency</option>}</select></label>}
+            <button className={styles.primaryButton} disabled={!!busy}>{operationFormOpen === "backup" ? "Send Backup Request" : operationFormOpen === "traffic" ? "Start Traffic Stop" : "Create Tow Request"}</button>
+          </form>
+        </div>
+      )}
+
+      {panicBoardOpen && (
+        <div className={`${styles.modalBackdrop} ${styles.priorityBackdrop}`}>
+          <section className={`${styles.modal} ${styles.panicBoard}`}>
+            <header><div><span>EMERGENCY OPERATIONS</span><h2>Active Officer Panics</h2></div><button onClick={()=>setPanicBoardOpen(false)}><X/></button></header>
+            <div className={styles.panicList}>
+              {panicAlerts.map((alert:any)=>{
+                const shift=Array.isArray(alert.unit)?alert.unit[0]:alert.unit;
+                const unit=Array.isArray(shift?.unit)?shift.unit[0]:shift?.unit;
+                const person=Array.isArray(unit?.user)?unit.user[0]:unit?.user;
+                return <article key={alert.id}><Siren/><div><b>{unit?.callsign || unit?.identifier_name || "Officer"}</b><strong>{person?.display_name || person?.username || "Connected unit"}</strong><span>{alert.location || "Location not supplied"}</span><small>{alert.message} · {new Date(alert.activated_at).toLocaleString()}</small></div><button onClick={()=>resolvePanic(alert.id)} disabled={!!busy}>Clear Panic</button></article>
+              })}
+              {!panicAlerts.length && <div className={styles.emptyPanel}>No active officer panics.</div>}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {selectedRecord && (
+        <div className={`${styles.modalBackdrop} ${styles.priorityBackdrop}`}>
+          <section className={`${styles.modal} ${styles.recordViewer}`}>
+            <header><div><span>{String(selectedRecord.record_type).toUpperCase()} · {selectedRecord.record_number}</span><h2>{selectedRecord.title}</h2></div><button onClick={()=>setSelectedRecord(null)}><X/></button></header>
+            <div className={styles.recordMeta}>
+              <article><span>Status</span><b>{selectedRecord.status}</b></article>
+              <article><span>Created</span><b>{new Date(selectedRecord.created_at).toLocaleString()}</b></article>
+              <article><span>Location</span><b>{selectedRecord.location || "Not recorded"}</b></article>
+              <article><span>Subject</span><b>{selectedRecord.character ? `${selectedRecord.character.first_name} ${selectedRecord.character.last_name}` : selectedRecord.vehicle ? `${selectedRecord.vehicle.plate_number} · ${selectedRecord.vehicle.make || ""} ${selectedRecord.vehicle.model || ""}` : "No subject attached"}</b></article>
+              <article><span>Officer</span><b>{selectedRecord.officer ? `${selectedRecord.officer.callsign || ""} ${selectedRecord.officer.rank_name || ""} · ${selectedRecord.officer.badge_number || "No badge"}` : "Officer identity unavailable"}</b></article>
+            </div>
+            <section className={styles.narrativeBlock}><span>Officer Narrative</span><p>{selectedRecord.narrative || "No narrative recorded."}</p></section>
+            {selectedRecord.charges?.length > 0 && <section className={styles.viewerCharges}><header>Attached Charges</header>{selectedRecord.charges.map((charge:any)=><article key={charge.id}><b>{charge.code}</b><span>{charge.title}</span><small>${Number(charge.fine_amount||0).toFixed(0)} · {charge.jail_minutes||0} min · {charge.points||0} pts</small></article>)}</section>}
+            <div className={styles.recordTotals}><span>Fine <b>${Number(selectedRecord.total_fine||0).toFixed(0)}</b></span><span>Jail <b>{selectedRecord.total_jail_minutes||0} min</b></span><span>Points <b>{selectedRecord.total_points||0}</b></span><span>Bond <b>${Number(selectedRecord.bond_amount||0).toFixed(0)}</b></span></div>
+          </section>
+        </div>
+      )}
+
       {recordFormOpen && (
         <div className={styles.modalBackdrop}>
           <form className={styles.modal} onSubmit={async (event)=>{event.preventDefault();const f=new FormData(event.currentTarget);const ok=await api("/api/leo/records",{action:"create_record",communityId,recordType:recordFormOpen,identifierId:selected?.id,title:f.get("title"),location:f.get("location"),narrative:f.get("narrative"),characterId:recordSubject?.type==="character"?recordSubject.id:null,vehicleId:recordSubject?.type==="vehicle"?recordSubject.id:null,charges:selectedCharges});if(ok){setRecordFormOpen("");setMessage(`${recordFormOpen} created successfully.`);}}}>
