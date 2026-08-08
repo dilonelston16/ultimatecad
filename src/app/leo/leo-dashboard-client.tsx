@@ -31,7 +31,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./leo-dashboard.module.css";
 
@@ -68,13 +68,13 @@ export default function LeoDashboardClient({
   units,
   calls,
   assignments,
-  panicAlerts,
+  panicAlerts: initialPanicAlerts,
   bolos,
   organization,
   canSelfDispatch,
   canManageCalls,
   soundEnabled,
-  records = [], warrants = [], penalCodes = [], trafficStops = [], towRequests = [], bookings = [], backupRequests = [],
+  records = [], warrants = [], penalCodes = [], trafficStops: initialTrafficStops = [], towRequests: initialTowRequests = [], bookings = [], backupRequests: initialBackupRequests = [],
   loadError = "",
 }: any) {
   const router = useRouter();
@@ -96,7 +96,16 @@ export default function LeoDashboardClient({
   const [characterRecordLoading, setCharacterRecordLoading] = useState(false);
   const [clearConfirmation, setClearConfirmation] = useState("");
   const [panicBoardOpen, setPanicBoardOpen] = useState(false);
+  const [panicAlerts, setPanicAlerts] = useState<any[]>(initialPanicAlerts ?? []);
+  const [trafficStops, setTrafficStops] = useState<any[]>(initialTrafficStops ?? []);
+  const [towRequests, setTowRequests] = useState<any[]>(initialTowRequests ?? []);
+  const [backupRequests, setBackupRequests] = useState<any[]>(initialBackupRequests ?? []);
   const [operationFormOpen, setOperationFormOpen] = useState<"backup"|"traffic"|"tow"|"">("");
+
+  useEffect(() => setPanicAlerts(initialPanicAlerts ?? []), [initialPanicAlerts]);
+  useEffect(() => setTrafficStops(initialTrafficStops ?? []), [initialTrafficStops]);
+  useEffect(() => setTowRequests(initialTowRequests ?? []), [initialTowRequests]);
+  useEffect(() => setBackupRequests(initialBackupRequests ?? []), [initialBackupRequests]);
 
   const activeIdentifiers = identifiers.filter(
     (identifier: any) => !identifier.is_archived
@@ -284,46 +293,42 @@ export default function LeoDashboardClient({
       setMessage("Clock in before activating panic.");
       return;
     }
-
-    const location =
-      window.prompt("Current location or postal:", "") || "";
-
-    const ok = await api("/api/leo/panic", {
-      shiftId: activeShift.id,
-      location,
-      message: "Officer activated emergency panic",
+    const location = window.prompt("Current location or postal:", "") || "";
+    setBusy("panic");
+    setMessage("");
+    const response = await fetch("/api/leo/panic", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ shiftId: activeShift.id, location, message: "Officer activated emergency panic" }),
     });
-
-    if (ok) {
-      setMessage(
-        "PANIC ACTIVATED — all connected units have been alerted."
-      );
-
-      if (soundEnabled) {
-        try {
-          const context = new AudioContext();
-          const oscillator = context.createOscillator();
-          const gain = context.createGain();
-          oscillator.frequency.value = 880;
-          gain.gain.value = 0.08;
-          oscillator.connect(gain);
-          gain.connect(context.destination);
-          oscillator.start();
-          setTimeout(() => {
-            oscillator.stop();
-            void context.close();
-          }, 450);
-        } catch {}
-      }
-    }
+    const body = await response.json();
+    setBusy("");
+    if (!response.ok) { setMessage(body.error || "Unable to activate panic."); return; }
+    if (body.alert) setPanicAlerts((old) => [body.alert, ...old.filter((a:any)=>a.id!==body.alert.id)]);
+    setPanicBoardOpen(true);
+    setMessage("PANIC ACTIVATED — all connected units have been alerted.");
+    router.refresh();
+    if (soundEnabled) { try { const context=new AudioContext(); const oscillator=context.createOscillator(); const gain=context.createGain(); oscillator.frequency.value=880; gain.gain.value=.08; oscillator.connect(gain); gain.connect(context.destination); oscillator.start(); setTimeout(()=>{oscillator.stop();void context.close();},450); } catch {} }
   }
 
   async function resolvePanic(alertId: string) {
-    const ok = await api("/api/leo/panic", { action: "resolve", alertId });
-    if (ok) {
-      setMessage("Panic cleared and unit returned to available.");
-      if (panicAlerts.length <= 1) setPanicBoardOpen(false);
-    }
+    setBusy("resolve-panic");
+    const response=await fetch("/api/leo/panic",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"resolve",alertId})});
+    const body=await response.json();
+    setBusy("");
+    if(!response.ok){setMessage(body.error||"Unable to clear panic.");return;}
+    setPanicAlerts((old)=>old.filter((a:any)=>a.id!==alertId));
+    setMessage("Panic cleared and unit returned to available.");
+    router.refresh();
+  }
+
+  async function clearOperation(kind:"backup"|"traffic"|"tow", id:string) {
+    const action=kind==="backup"?"resolve_backup":kind==="traffic"?"end_traffic_stop":"complete_tow";
+    const ok=await api("/api/leo/operations",{action,communityId,id,outcome:"cleared"});
+    if(!ok) return;
+    if(kind==="backup") setBackupRequests((old)=>old.filter((x:any)=>x.id!==id));
+    if(kind==="traffic") setTrafficStops((old)=>old.filter((x:any)=>x.id!==id));
+    if(kind==="tow") setTowRequests((old)=>old.filter((x:any)=>x.id!==id));
+    setMessage(kind==="backup"?"Backup request cleared.":kind==="traffic"?"Traffic stop cleared.":"Tow request completed.");
   }
 
   async function submitOperation(event: React.FormEvent<HTMLFormElement>) {
@@ -660,7 +665,7 @@ export default function LeoDashboardClient({
           <Siren />
           <strong>ACTIVE OFFICER PANIC</strong>
           <span>
-            {panicAlerts[0]?.unit?.unit?.callsign || "Unit"} ·{" "}
+            {(()=>{const shift=units.find((u:any)=>u.id===panicAlerts[0]?.shift_id);const raw=shift?.unit;const unit=Array.isArray(raw)?raw[0]:raw;return unit?.callsign||unit?.identifier_name||"Unit";})()} ·{" "}
             {panicAlerts[0].location || "Unknown location"}
           </span>
           <b>{panicAlerts.length}</b>
@@ -878,9 +883,9 @@ export default function LeoDashboardClient({
         <div className={`${styles.panel} ${styles.operationsPanel}`}>
           <header><h2>Active Operations</h2><span>{trafficStops.length + towRequests.length + backupRequests.length} live</span></header>
           <div className={styles.operationRows}>
-            {backupRequests.slice(0,3).map((item:any)=><article key={item.id}><Siren/><div><b>Backup · {item.priority}</b><span>{item.location || "Location pending"}</span><small>{item.reason}</small></div></article>)}
-            {trafficStops.slice(0,3).map((item:any)=><article key={item.id}><Car/><div><b>{item.stop_number}</b><span>{item.location}</span><small>{item.reason}</small></div></article>)}
-            {towRequests.slice(0,3).map((item:any)=><article key={item.id}><MapPin/><div><b>{item.request_number}</b><span>{item.location}</span><small>{item.status} · {item.reason}</small></div></article>)}
+            {backupRequests.slice(0,3).map((item:any)=><article key={item.id}><Siren/><div><b>Backup · {item.priority}</b><span>{item.location || "Location pending"}</span><small>{item.reason}</small></div><button type="button" onClick={()=>clearOperation("backup",item.id)}>Clear</button></article>)}
+            {trafficStops.slice(0,3).map((item:any)=><article key={item.id}><Car/><div><b>{item.stop_number}</b><span>{item.location}</span><small>{item.reason}</small></div><button type="button" onClick={()=>clearOperation("traffic",item.id)}>Clear</button></article>)}
+            {towRequests.slice(0,3).map((item:any)=><article key={item.id}><MapPin/><div><b>{item.request_number}</b><span>{item.location}</span><small>{item.status} · {item.reason}</small></div><button type="button" onClick={()=>clearOperation("tow",item.id)}>Complete</button></article>)}
             {!trafficStops.length && !towRequests.length && !backupRequests.length && <div className={styles.emptyPanel}>No active traffic, tow, or backup operations.</div>}
           </div>
         </div>
@@ -1321,9 +1326,9 @@ export default function LeoDashboardClient({
             <header><div><span>EMERGENCY OPERATIONS</span><h2>Active Officer Panics</h2></div><button onClick={()=>setPanicBoardOpen(false)}><X/></button></header>
             <div className={styles.panicList}>
               {panicAlerts.map((alert:any)=>{
-                const shift=Array.isArray(alert.unit)?alert.unit[0]:alert.unit;
-                const unit=Array.isArray(shift?.unit)?shift.unit[0]:shift?.unit;
-                const person=Array.isArray(unit?.user)?unit.user[0]:unit?.user;
+                const shift=units.find((u:any)=>u.id===alert.shift_id);
+                const rawUnit=shift?.unit; const unit=Array.isArray(rawUnit)?rawUnit[0]:rawUnit;
+                const rawPerson=unit?.user; const person=Array.isArray(rawPerson)?rawPerson[0]:rawPerson;
                 return <article key={alert.id}><Siren/><div><b>{unit?.callsign || unit?.identifier_name || "Officer"}</b><strong>{person?.display_name || person?.username || "Connected unit"}</strong><span>{alert.location || "Location not supplied"}</span><small>{alert.message} · {new Date(alert.activated_at).toLocaleString()}</small></div><button onClick={()=>resolvePanic(alert.id)} disabled={!!busy}>Clear Panic</button></article>
               })}
               {!panicAlerts.length && <div className={styles.emptyPanel}>No active officer panics.</div>}
@@ -1394,14 +1399,15 @@ export default function LeoDashboardClient({
 
       {recordFormOpen && (
         <div className={styles.modalBackdrop}>
-          <form className={styles.modal} onSubmit={async (event)=>{event.preventDefault();const f=new FormData(event.currentTarget);const ok=await api("/api/leo/records",{action:"create_record",communityId,recordType:recordFormOpen,identifierId:selected?.id,title:f.get("title"),location:f.get("location"),narrative:f.get("narrative"),characterId:recordSubject?.type==="character"?recordSubject.id:null,vehicleId:recordSubject?.type==="vehicle"?recordSubject.id:null,charges:selectedCharges});if(ok){setRecordFormOpen("");setMessage(`${recordFormOpen} created successfully.`);}}}>
+          <form className={styles.modal} onSubmit={async (event)=>{event.preventDefault();const f=new FormData(event.currentTarget);const ok=await api("/api/leo/records",{action:"create_record",communityId,recordType:recordFormOpen,identifierId:selected?.id,title:f.get("title"),location:f.get("location"),narrative:f.get("narrative"),characterId:recordSubject?.type==="character"?recordSubject.id:null,vehicleId:recordSubject?.type==="vehicle"?recordSubject.id:null,charges:selectedCharges,additionalFine:Number(f.get("additionalFine")||0),additionalJail:Number(f.get("additionalJail")||0),additionalPoints:Number(f.get("additionalPoints")||0),additionalBond:Number(f.get("additionalBond")||0)});if(ok){setRecordFormOpen("");setMessage(`${recordFormOpen} created successfully.`);}}}>
             <header><div><span>LEO RECORDS</span><h2>New {recordFormOpen}</h2></div><button type="button" onClick={()=>setRecordFormOpen("")}><X/></button></header>
             <div className={styles.formGrid}>
-              <label className={styles.full}>Title<input name="title" required placeholder="Record title / primary incident" /></label>
+              <label className={styles.full}>Record Title<select name="title" required defaultValue=""><option value="" disabled>Select a report title</option>{(recordFormOpen==="report"?["Incident Report","Arrest Report","Traffic Stop Report","Use of Force Report","Vehicle Pursuit Report","Foot Pursuit Report","Collision / Accident Report","Domestic Disturbance Report","Theft / Robbery Report","Assault Report","Weapons Incident Report","Drug / Narcotics Report","Property / Evidence Report","Missing Person Report","Welfare Check Report","Trespassing Report","Suspicious Person / Vehicle Report","Officer Assist Report","Supplemental Report","Other / General Report"]:recordFormOpen==="citation"?["Traffic Citation","Parking Citation","Equipment Violation","Moving Violation","License / Registration Violation","Other Citation"]:["Arrest - Misdemeanor","Arrest - Felony","Arrest - Warrant","Arrest - Traffic","Arrest - Narcotics","Arrest - Weapons","Arrest - Other"]).map(title=><option key={title} value={title}>{title}</option>)}</select></label>
               <label>Location<input name="location" placeholder="Location / postal" /></label>
               <label>Subject<div className={styles.subjectSelect}><input value={recordSubject?recordSubject.title:""} readOnly placeholder="Select character / vehicle" /><button type="button" onClick={()=>setSearchOpen(true)}>Search</button></div></label>
               <label className={styles.full}>Narrative<textarea name="narrative" required placeholder="Document the facts, observations, actions taken, and disposition." /></label>
-              {(recordFormOpen==="citation"||recordFormOpen==="arrest")&&<div className={styles.full}><label>Penal code search<input value={penalQuery} onChange={e=>setPenalQuery(e.target.value)} placeholder="Search code, title, or category" /></label><div className={styles.chargePicker}>{penalCodes.filter((c:any)=>`${c.code} ${c.title} ${c.category}`.toLowerCase().includes(penalQuery.toLowerCase())).slice(0,8).map((c:any)=><button type="button" key={c.id} onClick={()=>setSelectedCharges((old:any[])=>old.some(x=>x.id===c.id)?old.filter(x=>x.id!==c.id):[...old,c])} className={selectedCharges.some((x:any)=>x.id===c.id)?styles.chargeSelected:""}><b>{c.code}</b><span>{c.title}</span><small>${Number(c.fine_amount).toFixed(0)} · {c.jail_minutes} min · {c.points} pts</small></button>)}</div></div>}
+              <div className={styles.full}><label>Penal Code / Charges Search<input value={penalQuery} onChange={e=>setPenalQuery(e.target.value)} placeholder="Search code, title, or category" /></label><div className={styles.chargePicker}>{penalCodes.filter((c:any)=>`${c.code} ${c.title} ${c.category}`.toLowerCase().includes(penalQuery.toLowerCase())).slice(0,8).map((c:any)=><button type="button" key={c.id} onClick={()=>setSelectedCharges((old:any[])=>old.some(x=>x.id===c.id)?old.filter(x=>x.id!==c.id):[...old,c])} className={selectedCharges.some((x:any)=>x.id===c.id)?styles.chargeSelected:""}><b>{c.code}</b><span>{c.title}</span><small>${Number(c.fine_amount).toFixed(0)} · {c.jail_minutes} min · {c.points} pts</small></button>)}</div></div>
+              <div className={`${styles.full} ${styles.penaltyGrid}`}><label>Additional Fine ($)<input name="additionalFine" type="number" min="0" step="1" defaultValue="0" /></label><label>Additional Jail (min)<input name="additionalJail" type="number" min="0" step="1" defaultValue="0" /></label><label>Additional Points<input name="additionalPoints" type="number" min="0" step="1" defaultValue="0" /></label><label>Additional Bond ($)<input name="additionalBond" type="number" min="0" step="1" defaultValue="0" /></label></div>
             </div>
             <button className={styles.primaryButton} disabled={!!busy}>Create {recordFormOpen}</button>
           </form>

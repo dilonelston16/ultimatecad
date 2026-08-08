@@ -111,9 +111,7 @@ export default async function LeoPage() {
       .is("cleared_at", null),
     supabase
       .from("leo_panic_alerts")
-      .select(
-        "id,shift_id,location,message,status,activated_at,unit:leo_shifts(unit:leo_unit_profiles(identifier_name,callsign,user:profiles(display_name,username)))"
-      )
+      .select("id,shift_id,location,message,status,activated_at")
       .eq("community_id", membership.community_id)
       .eq("status", "active")
       .order("activated_at", { ascending: false }),

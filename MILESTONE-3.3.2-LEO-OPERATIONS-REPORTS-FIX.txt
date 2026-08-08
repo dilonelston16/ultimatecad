@@ -1,0 +1,14 @@
+UltimateCAD Milestone 3.3.2 — LEO Operations & Reports Fix
+
+PATCHED
+- Active PANIC query no longer depends on fragile nested Supabase relation joins.
+- PANIC activation/clearing updates the dashboard immediately and still refreshes server data.
+- Active PANIC board resolves unit/officer identity from active unit data.
+- Active Operations now has Clear/Complete controls for backup, traffic stop and tow workflows.
+- Report/Citation/Arrest title is now a curated dropdown.
+- Penal Code charges can be attached to Reports, Citations and Arrests.
+- Manual fine, jail minutes, points and bond adjustments are supported on all record types.
+- Saved record totals include both charge totals and manual adjustments.
+
+NO NEW SQL MIGRATION REQUIRED.
+Requires the existing Milestone 3.2, 3.3 and 3.3.1 migrations already included in this package.
