@@ -1130,7 +1130,7 @@ export default function LeoDashboardClient({
       )}
 
       {searchOpen && (
-        <div className={styles.modalBackdrop}>
+        <div className={`${styles.modalBackdrop} ${recordFormOpen ? styles.searchBackdrop : ""}`}>
           <section
             className={`${styles.modal} ${styles.searchModal}`}
           >
@@ -1165,17 +1165,28 @@ export default function LeoDashboardClient({
             <div className={styles.searchResults}>
               {searchResults.length ? (
                 searchResults.map((result) => (
-                  <article
+                  <button
+                    type="button"
+                    className={styles.searchResultRow}
                     key={`${result.type}-${result.id}`}
-                    onClick={() => { if (recordFormOpen && ["character","vehicle"].includes(result.type)) { setRecordSubject(result); setSearchOpen(false); } }}
+                    onClick={() => {
+                      if (recordFormOpen && ["character", "vehicle"].includes(result.type)) {
+                        setRecordSubject(result);
+                        setSearchOpen(false);
+                        return;
+                      }
+                      setMessage(`${result.title} selected. Open a report, citation, or arrest to attach this record.`);
+                      setSearchOpen(false);
+                    }}
                   >
                     <span>{result.type}</span>
                     <div>
                       <h3>{result.title}</h3>
                       <p>{result.subtitle}</p>
                     </div>
+                    <small>{recordFormOpen && ["character", "vehicle"].includes(result.type) ? "Select" : "View"}</small>
                     <ChevronRight />
-                  </article>
+                  </button>
                 ))
               ) : (
                 <div className={styles.emptyPanel}>

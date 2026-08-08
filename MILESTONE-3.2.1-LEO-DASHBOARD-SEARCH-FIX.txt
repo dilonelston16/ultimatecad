@@ -1,0 +1,22 @@
+UltimateCAD Milestone 3.2.1 — LEO Dashboard & MDT Search Refinement
+
+WHAT THIS PATCHED
+- Fixed nested MDT search appearing behind report/citation/arrest forms.
+- Search receives a higher foreground layer while used as a record subject picker.
+- Character and vehicle search results are now true clickable buttons.
+- Selecting a character or vehicle attaches it to the active record form and closes search.
+- Improved hover/focus/selected interaction clarity for MDT search results.
+- Increased search panel width, hierarchy, spacing, and mobile usability.
+- Refined commercial MDT dashboard proportions, metrics, panel spacing, calls/units hierarchy, quick actions, panic status, and shift dock.
+- Preserved Civilian, Economy, Banking, Businesses, Stores, Inventory, Marketplace, DMV, authentication, existing records, saved officer identifiers, and top PANIC behavior.
+
+DATABASE
+- No new SQL migration is required for this refinement patch.
+
+BUILD
+pnpm build
+
+GIT
+git add .
+git commit -m "fix: refine LEO dashboard and MDT search"
+git push origin main
