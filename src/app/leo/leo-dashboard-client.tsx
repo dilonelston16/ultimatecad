@@ -92,6 +92,9 @@ export default function LeoDashboardClient({
   const [selectedCharges, setSelectedCharges] = useState<any[]>([]);
   const [penalQuery, setPenalQuery] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [selectedCharacterRecord, setSelectedCharacterRecord] = useState<any>(null);
+  const [characterRecordLoading, setCharacterRecordLoading] = useState(false);
+  const [clearConfirmation, setClearConfirmation] = useState("");
   const [panicBoardOpen, setPanicBoardOpen] = useState(false);
   const [operationFormOpen, setOperationFormOpen] = useState<"backup"|"traffic"|"tow"|"">("");
 
@@ -354,6 +357,39 @@ export default function LeoDashboardClient({
     setBusy("");
     if(!response.ok){setMessage(body.error || "Unable to open record.");return;}
     setSelectedRecord(body.record);
+  }
+
+  async function openCharacterRecords(characterId:string){
+    setCharacterRecordLoading(true);
+    setMessage("");
+    const response=await fetch(`/api/leo/character-records?communityId=${encodeURIComponent(communityId)}&characterId=${encodeURIComponent(characterId)}`);
+    const body=await response.json();
+    setCharacterRecordLoading(false);
+    if(!response.ok){setMessage(body.error || "Unable to open player records.");return;}
+    setSelectedCharacterRecord(body);
+    setClearConfirmation("");
+  }
+
+  async function clearCharacterRecords(){
+    if(!selectedCharacterRecord?.character?.id) return;
+    setBusy("clear-character-records");
+    setMessage("");
+    const response=await fetch("/api/leo/character-records",{
+      method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({
+        action:"clear_all",communityId,characterId:selectedCharacterRecord.character.id,confirmation:clearConfirmation
+      })
+    });
+    const body=await response.json();
+    setBusy("");
+    if(!response.ok){setMessage(body.error || "Unable to clear player records.");return;}
+    const c=body.cleared || {};
+    setMessage(`Player LEO records cleared: ${c.records||0} records, ${c.warrants||0} warrants, ${c.bookings||0} bookings, ${c.trafficStops||0} traffic stops.`);
+    setSelectedCharacterRecord(null);
+    setSearchResults([]);
+    setQuery("");
+    router.refresh();
   }
 
   async function createCall(
@@ -1240,6 +1276,11 @@ export default function LeoDashboardClient({
                         void openRecordById(result.id);
                         return;
                       }
+                      if (result.type === "character") {
+                        setSearchOpen(false);
+                        void openCharacterRecords(result.id);
+                        return;
+                      }
                       setMessage(`${result.title} selected. Open a report, citation, or arrest to attach this record.`);
                       setSearchOpen(false);
                     }}
@@ -1287,6 +1328,48 @@ export default function LeoDashboardClient({
               })}
               {!panicAlerts.length && <div className={styles.emptyPanel}>No active officer panics.</div>}
             </div>
+          </section>
+        </div>
+      )}
+
+      {selectedCharacterRecord && (
+        <div className={`${styles.modalBackdrop} ${styles.priorityBackdrop}`}>
+          <section className={`${styles.modal} ${styles.characterRecordViewer}`}>
+            <header>
+              <div>
+                <span>PLAYER RECORD MANAGEMENT</span>
+                <h2>{selectedCharacterRecord.character.first_name} {selectedCharacterRecord.character.last_name}</h2>
+                <p>State ID {selectedCharacterRecord.character.state_id} · {selectedCharacterRecord.character.is_archived ? "Archived character" : "Active character"}</p>
+              </div>
+              <button onClick={()=>setSelectedCharacterRecord(null)}><X/></button>
+            </header>
+
+            <div className={styles.characterRecordStats}>
+              <article><span>LEO Records</span><b>{selectedCharacterRecord.records.length}</b></article>
+              <article><span>Warrants</span><b>{selectedCharacterRecord.warrants.length}</b></article>
+              <article><span>Bookings</span><b>{selectedCharacterRecord.bookings.length}</b></article>
+              <article><span>Traffic Stops</span><b>{selectedCharacterRecord.trafficStops.length}</b></article>
+            </div>
+
+            <section className={styles.characterRecordsSection}>
+              <header><h3>Reports, Citations & Arrests</h3><span>{selectedCharacterRecord.records.length} total</span></header>
+              <div>
+                {selectedCharacterRecord.records.map((record:any)=><button type="button" key={record.id} className={styles.recordRow} onClick={()=>{setSelectedCharacterRecord(null);void openRecordById(record.id)}}><span>{record.record_number}</span><b>{record.title}</b><small>{record.record_type} · {record.status}</small><ChevronRight/></button>)}
+                {!selectedCharacterRecord.records.length && <div className={styles.emptyPanel}>No LEO reports, citations, or arrests on this player.</div>}
+              </div>
+            </section>
+
+            {(selectedCharacterRecord.warrants.length>0 || selectedCharacterRecord.bookings.length>0 || selectedCharacterRecord.trafficStops.length>0) && <section className={styles.characterLinkedData}>
+              {selectedCharacterRecord.warrants.length>0 && <div><h3>Warrants</h3>{selectedCharacterRecord.warrants.map((w:any)=><article key={w.id}><b>{w.warrant_number}</b><span>{w.title}</span><small>{w.status} · {w.priority}</small></article>)}</div>}
+              {selectedCharacterRecord.bookings.length>0 && <div><h3>Bookings</h3>{selectedCharacterRecord.bookings.map((b:any)=><article key={b.id}><b>{b.booking_number}</b><span>{b.status}</span><small>{b.jail_minutes} min · ${Number(b.bond_amount||0).toFixed(0)} bond</small></article>)}</div>}
+              {selectedCharacterRecord.trafficStops.length>0 && <div><h3>Traffic Stops</h3>{selectedCharacterRecord.trafficStops.map((t:any)=><article key={t.id}><b>{t.stop_number}</b><span>{t.location}</span><small>{t.status} · {t.reason}</small></article>)}</div>}
+            </section>}
+
+            {selectedCharacterRecord.canClear && <section className={styles.dangerZone}>
+              <div><ShieldAlert/><div><b>Clear all LEO records</b><p>This permanently removes this character's reports, citations, arrests, warrants, bookings, traffic stops and LEO-only timeline entries. Civilian, DMV, banking, economy, business and vehicle data are preserved.</p></div></div>
+              <label>Type <strong>CLEAR</strong> to confirm<input value={clearConfirmation} onChange={e=>setClearConfirmation(e.target.value)} placeholder="CLEAR" /></label>
+              <button type="button" disabled={clearConfirmation.trim().toUpperCase()!=="CLEAR" || !!busy} onClick={clearCharacterRecords}>{busy==="clear-character-records"?"Clearing…":"Clear Player LEO Records"}</button>
+            </section>}
           </section>
         </div>
       )}

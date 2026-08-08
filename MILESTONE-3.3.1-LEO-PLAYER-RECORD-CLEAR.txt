@@ -1,0 +1,28 @@
+UltimateCAD Milestone 3.3.1 — Player LEO Record Management
+
+1. Run Supabase migration:
+   supabase/migrations/202608080003_leo_character_record_management.sql
+
+2. Search a character from LEO / MDT.
+3. Clicking a character now opens a Player Record Management window.
+4. Supervisors/command/admin/owners can clear all LEO data tied to that character by typing CLEAR.
+
+Cleared:
+- Reports
+- Citations
+- Arrests
+- Record charges
+- Warrants
+- Bookings
+- Traffic stops
+- LEO-only character timeline entries
+
+Preserved:
+- Character/civilian profile
+- Vehicles
+- DMV/licenses
+- Banking/economy
+- Businesses/inventory
+- Non-LEO timeline history
+
+The clear is written to leo_officer_activity for audit tracking.
