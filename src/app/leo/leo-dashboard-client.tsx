@@ -47,13 +47,13 @@ const statuses = [
 ];
 
 const quickActions = [
-  ["New Report", BookOpenCheck, "Phase 2"],
-  ["New Citation", Gavel, "Phase 2"],
-  ["New Arrest", BadgeCheck, "Phase 2"],
+  ["New Report", BookOpenCheck, "report"],
+  ["New Citation", Gavel, "citation"],
+  ["New Arrest", BadgeCheck, "arrest"],
   ["MDT Search", UserRoundSearch, "search"],
   ["Self Dispatch", Radio, "self"],
-  ["BOLO Board", ShieldAlert, "Phase 2"],
-  ["Warrant Check", Gavel, "Phase 2"],
+  ["BOLO Board", ShieldAlert, "bolo"],
+  ["Warrant Check", Gavel, "search"],
   ["Request Backup", Siren, "panic"],
 ];
 
@@ -72,6 +72,7 @@ export default function LeoDashboardClient({
   canSelfDispatch,
   canManageCalls,
   soundEnabled,
+  records = [], warrants = [], penalCodes = [], trafficStops = [], towRequests = [], bookings = [], backupRequests = [],
   loadError = "",
 }: any) {
   const router = useRouter();
@@ -84,6 +85,10 @@ export default function LeoDashboardClient({
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [recordFormOpen, setRecordFormOpen] = useState<string>("");
+  const [recordSubject, setRecordSubject] = useState<any>(null);
+  const [selectedCharges, setSelectedCharges] = useState<any[]>([]);
+  const [penalQuery, setPenalQuery] = useState("");
 
   const activeIdentifiers = identifiers.filter(
     (identifier: any) => !identifier.is_archived
@@ -370,14 +375,11 @@ export default function LeoDashboardClient({
   function handleQuickAction(action: string) {
     if (action === "search") setSearchOpen(true);
     else if (action === "panic") void panic();
+    else if (["report", "citation", "arrest"].includes(action)) { setRecordFormOpen(action); setSelectedCharges([]); setRecordSubject(null); }
+    else if (action === "bolo") setMessage("BOLO management is available on the live BOLO board.");
     else if (action === "self") {
-      if (!canSelfDispatch) {
-        setMessage("Supervisor self-dispatch permission required.");
-      } else {
-        setMessage("Choose an active call and select Self Dispatch.");
-      }
-    } else {
-      setMessage(`${action} will be activated in LEO Phase 2.`);
+      if (!canSelfDispatch) setMessage("Supervisor self-dispatch permission required.");
+      else setMessage("Choose an active call and select Self Dispatch.");
     }
   }
 
@@ -598,9 +600,9 @@ export default function LeoDashboardClient({
         {[
           ["Active Calls", calls.length, Headphones, "#2f8cff"],
           ["Units On Duty", units.length, Car, "#438dff"],
-          ["Reports Today", 0, BookOpenCheck, "#9d52ff"],
-          ["Citations Today", 0, Gavel, "#ff9f2d"],
-          ["Arrests Today", 0, BadgeCheck, "#ff4949"],
+          ["Reports Today", records.filter((r:any)=>r.record_type === "report" && new Date(r.created_at).toDateString() === new Date().toDateString()).length, BookOpenCheck, "#9d52ff"],
+          ["Citations Today", records.filter((r:any)=>r.record_type === "citation" && new Date(r.created_at).toDateString() === new Date().toDateString()).length, Gavel, "#ff9f2d"],
+          ["Arrests Today", records.filter((r:any)=>r.record_type === "arrest" && new Date(r.created_at).toDateString() === new Date().toDateString()).length, BadgeCheck, "#ff4949"],
           ["BOLOs Active", bolos.length, ShieldAlert, "#ff681f"],
         ].map(([label, value, Icon, color]: any) => (
           <article key={label}>
@@ -768,67 +770,23 @@ export default function LeoDashboardClient({
         </div>
 
         <div className={`${styles.panel} ${styles.warrantPanel}`}>
-          <header>
-            <h2>Warrants</h2>
-            <span>Phase 2</span>
-          </header>
-
-          <div className={styles.warrantRows}>
-            {[
-              ["Felony", 0, "#ef3d4e"],
-              ["Misdemeanor", 0, "#ffb32e"],
-              ["Traffic", 0, "#3188ff"],
-              ["Parole Violation", 0, "#a464ff"],
-            ].map(([label, count, color]: any) => (
-              <article key={label}>
-                <span style={{ background: color }} />
-                <b>{label}</b>
-                <strong>{count}</strong>
-              </article>
-            ))}
-          </div>
+          <header><h2>Active Warrants</h2><span>{warrants.length} active</span></header>
+          <div className={styles.placeholderRows}>{warrants.slice(0,5).map((w:any)=><article key={w.id}><span>{w.warrant_number}</span><b>{w.character ? `${w.character.first_name} ${w.character.last_name}` : w.title}</b><small>{w.priority}</small></article>)}{!warrants.length&&<div className={styles.emptyPanel}>No active warrants.</div>}</div>
         </div>
 
         <div className={`${styles.panel} ${styles.reportsPanel}`}>
-          <header>
-            <h2>Recent Reports</h2>
-            <span>Phase 2</span>
-          </header>
-          <div className={styles.placeholderRows}>
-            <article>
-              <span>IR-Coming next</span>
-              <b>Incident reports will appear here</b>
-              <small>Phase 2</small>
-            </article>
-          </div>
+          <header><h2>Recent Reports</h2><span>{records.filter((r:any)=>r.record_type==="report").length} loaded</span></header>
+          <div className={styles.placeholderRows}>{records.filter((r:any)=>r.record_type==="report").slice(0,5).map((r:any)=><article key={r.id}><span>{r.record_number}</span><b>{r.title}</b><small>{r.status}</small></article>)}{!records.some((r:any)=>r.record_type==="report")&&<div className={styles.emptyPanel}>No reports yet.</div>}</div>
         </div>
 
         <div className={`${styles.panel} ${styles.citationsPanel}`}>
-          <header>
-            <h2>Recent Citations</h2>
-            <span>Phase 2</span>
-          </header>
-          <div className={styles.placeholderRows}>
-            <article>
-              <span>CIT-Coming next</span>
-              <b>Citations will appear here</b>
-              <small>Phase 2</small>
-            </article>
-          </div>
+          <header><h2>Recent Citations</h2><span>{records.filter((r:any)=>r.record_type==="citation").length} loaded</span></header>
+          <div className={styles.placeholderRows}>{records.filter((r:any)=>r.record_type==="citation").slice(0,5).map((r:any)=><article key={r.id}><span>{r.record_number}</span><b>{r.title}</b><small>${Number(r.total_fine||0).toFixed(0)}</small></article>)}{!records.some((r:any)=>r.record_type==="citation")&&<div className={styles.emptyPanel}>No citations yet.</div>}</div>
         </div>
 
         <div className={`${styles.panel} ${styles.arrestsPanel}`}>
-          <header>
-            <h2>Arrests Today</h2>
-            <span>Phase 2</span>
-          </header>
-          <div className={styles.placeholderRows}>
-            <article>
-              <span>AR-Coming next</span>
-              <b>Arrest bookings will appear here</b>
-              <small>Phase 2</small>
-            </article>
-          </div>
+          <header><h2>Recent Arrests</h2><span>{bookings.length} in custody</span></header>
+          <div className={styles.placeholderRows}>{records.filter((r:any)=>r.record_type==="arrest").slice(0,5).map((r:any)=><article key={r.id}><span>{r.record_number}</span><b>{r.title}</b><small>{r.total_jail_minutes||0} min</small></article>)}{!records.some((r:any)=>r.record_type==="arrest")&&<div className={styles.emptyPanel}>No arrests yet.</div>}</div>
         </div>
 
         <aside className={styles.panicCard}>
@@ -1209,6 +1167,7 @@ export default function LeoDashboardClient({
                 searchResults.map((result) => (
                   <article
                     key={`${result.type}-${result.id}`}
+                    onClick={() => { if (recordFormOpen && ["character","vehicle"].includes(result.type)) { setRecordSubject(result); setSearchOpen(false); } }}
                   >
                     <span>{result.type}</span>
                     <div>
@@ -1227,6 +1186,22 @@ export default function LeoDashboardClient({
           </section>
         </div>
       )}
+      {recordFormOpen && (
+        <div className={styles.modalBackdrop}>
+          <form className={styles.modal} onSubmit={async (event)=>{event.preventDefault();const f=new FormData(event.currentTarget);const ok=await api("/api/leo/records",{action:"create_record",communityId,recordType:recordFormOpen,identifierId:selected?.id,title:f.get("title"),location:f.get("location"),narrative:f.get("narrative"),characterId:recordSubject?.type==="character"?recordSubject.id:null,vehicleId:recordSubject?.type==="vehicle"?recordSubject.id:null,charges:selectedCharges});if(ok){setRecordFormOpen("");setMessage(`${recordFormOpen} created successfully.`);}}}>
+            <header><div><span>LEO RECORDS</span><h2>New {recordFormOpen}</h2></div><button type="button" onClick={()=>setRecordFormOpen("")}><X/></button></header>
+            <div className={styles.formGrid}>
+              <label className={styles.full}>Title<input name="title" required placeholder="Record title / primary incident" /></label>
+              <label>Location<input name="location" placeholder="Location / postal" /></label>
+              <label>Subject<div className={styles.subjectSelect}><input value={recordSubject?recordSubject.title:""} readOnly placeholder="Select character / vehicle" /><button type="button" onClick={()=>setSearchOpen(true)}>Search</button></div></label>
+              <label className={styles.full}>Narrative<textarea name="narrative" required placeholder="Document the facts, observations, actions taken, and disposition." /></label>
+              {(recordFormOpen==="citation"||recordFormOpen==="arrest")&&<div className={styles.full}><label>Penal code search<input value={penalQuery} onChange={e=>setPenalQuery(e.target.value)} placeholder="Search code, title, or category" /></label><div className={styles.chargePicker}>{penalCodes.filter((c:any)=>`${c.code} ${c.title} ${c.category}`.toLowerCase().includes(penalQuery.toLowerCase())).slice(0,8).map((c:any)=><button type="button" key={c.id} onClick={()=>setSelectedCharges((old:any[])=>old.some(x=>x.id===c.id)?old.filter(x=>x.id!==c.id):[...old,c])} className={selectedCharges.some((x:any)=>x.id===c.id)?styles.chargeSelected:""}><b>{c.code}</b><span>{c.title}</span><small>${Number(c.fine_amount).toFixed(0)} · {c.jail_minutes} min · {c.points} pts</small></button>)}</div></div>}
+            </div>
+            <button className={styles.primaryButton} disabled={!!busy}>Create {recordFormOpen}</button>
+          </form>
+        </div>
+      )}
+
     </div>
   );
 }

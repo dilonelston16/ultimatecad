@@ -1,0 +1,8 @@
+ULTIMATECAD MILESTONE 3.2 — LEO RECORDS & ENFORCEMENT CORE
+
+1. Copy/extract this update into C:\Projects\ultimatecad
+2. Run Supabase migration: supabase/migrations/202608080001_leo_records_enforcement_core.sql
+3. Build: rmdir /s /q .next && pnpm build
+4. Push: git add . && git commit -m "feat: add LEO records and enforcement core" && git push origin main
+
+This milestone adds the production data foundation for reports, citations, arrests, warrants, penal-code charge snapshots, traffic stops, tow requests, impounds, jail bookings, backup requests, call history, and officer activity. It also connects the dashboard to real report/citation/warrant counts and recent records.
